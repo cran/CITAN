@@ -1,0 +1,156 @@
+#' Computes the approximate (asymptotic) left-sided confidence interval for the kappa-index of
+#' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
+#' model with known scale parameter \eqn{s\ge 1}.
+#' The confidence interval bases on the observed value
+#' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
+#'
+#'
+#' For more information see man page on  \code{\link{rho.get}}, \code{\link{Sstat}} and the paper (Gagolewski, Grzegorzewski, 2010).
+#'
+#' @references
+#' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.),
+#' Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
+#'
+#' @title Left-sided approximate confidence interval for the kappa-index
+#' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
+#' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
+#' @param kappaInvDer the derivative of the inverse of \eqn{\kappa}.
+#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param n sample size.
+#' @param conf.level confidence level; defaults 0.95.
+#' @return Lower bound of the confidence interval.
+#' @seealso \code{\link{ppareto2}}, \code{\link{pareto2.confint.rho}}, \code{\link{Sstat}},
+#' \code{\link{pareto2.confint.rho.approx.upper}},
+#' \code{\link{pareto2.confint.rho.approx}}, \code{\link{rho.get}}
+#' @export
+pareto2.confint.rho.approx.lower <- function(v, kappa, kappaInvDer, s, n, conf.level=0.95)
+{
+	gamma <- 1-conf.level;
+
+	if (!is.numeric(v) || length(v) != 1)
+		stop("v must be a single numeric value");
+
+	if (v < 1e-6) return(0.0);
+# 	if (v > 1-1e-13) return (1.0);
+	if (gamma < 1e-5) return(0.0);
+
+
+	bord <- uniroot(function(rho, v, kappa, kappaInvDer, s, n, gamma)
+	{
+		k <- uniroot(function(k, s, kappa, rho) {
+				1-ppareto2(kappa(rho), k, s)-rho
+			}, c(1e-15,1e10), s, kappa, rho, tol=1e-20)$root;
+
+# 		k <- log(rho)/(log(s/(s+rho))); # round-off errors :-(
+# 		k <- log1p(rho-1)/(log1p(s/(s+rho)-1)); # round-off errors :-(
+
+		gprimerho <- dpareto2(kappa(rho), k, s)/abs(kappaInvDer(kappa(rho)));
+
+		qnorm(1-gamma, rho, sqrt(rho*(1-rho)/n)/(1+gprimerho))-v;
+	}, c(1e-7,1-1e-7), v, kappa, kappaInvDer, s, n, gamma, tol=1e-20)$root;
+
+	return(bord);
+
+# 	return(qnorm(gamma/2, v, sqrt(v*(1-v)/n)/(1+gprime)));
+}
+
+
+
+
+
+
+#' Computes the approximate (asymptotic) right-sided confidence interval for the kappa-index of
+#' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
+#' model with known scale parameter \eqn{s\ge 1}.
+#' The confidence interval bases on the observed value
+#' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
+#'
+#'
+#' For more information see man page on  \code{\link{rho.get}}, \code{\link{Sstat}} and the paper (Gagolewski, Grzegorzewski, 2010).
+#'
+#' @references
+#' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.),
+#' Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
+#'
+#' @title Right-sided approximate confidence interval for the kappa-index
+#' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
+#' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
+#' @param kappaInvDer the derivative of the inverse of \eqn{\kappa}.
+#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param n sample size.
+#' @param conf.level confidence level; defaults 0.95.
+#' @return Upper bound of the confidence interval.
+#' @seealso \code{\link{ppareto2}}, \code{\link{pareto2.confint.rho}}, \code{\link{Sstat}},
+#' \code{\link{pareto2.confint.rho.approx.lower}},
+#' \code{\link{pareto2.confint.rho.approx}}, \code{\link{rho.get}}
+#' @export
+pareto2.confint.rho.approx.upper <- function(v, kappa, kappaInvDer, s, n, conf.level=0.95)
+{
+	gamma <- 1-conf.level;
+
+	if (!is.numeric(v) || length(v) != 1)
+		stop("v must be a single numeric value");
+
+	if (v > 1-1e-6) return(1.0);
+# 	if (v < 1e-13) return (0.0);
+	if (gamma < 1e-5) return(1.0);
+
+
+	bord <- uniroot(function(rho, v, kappa, kappaInvDer, s, n, gamma)
+	{
+		k <- uniroot(function(k, s, kappa, rho) {
+				1-ppareto2(kappa(rho), k, s)-rho
+			}, c(1e-15,1e10), s, kappa, rho, tol=1e-20)$root;
+
+# 		k <- log(rho)/(log(s/(s+rho))); # round-off errors :-(
+# 		k <- log1p(rho-1)/(log1p(s/(s+rho)-1)); # round-off errors :-(
+
+		gprimerho <- dpareto2(kappa(rho), k, s)/abs(kappaInvDer(kappa(rho)));
+
+		qnorm(gamma, rho, sqrt(rho*(1-rho)/n)/(1+gprimerho))-v;
+	}, c(1e-7,1-1e-7), v, kappa, kappaInvDer, s, n, gamma, tol=1e-20)$root;
+
+	return(bord);
+
+# 	return(qnorm(gamma/2, v, sqrt(v*(1-v)/n)/(1+gprime)));
+}
+
+
+
+
+
+
+
+#' Computes the approximate (asymptotic) two-sided confidence interval for the kappa-index of
+#' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
+#' model with known scale parameter \eqn{s\ge 1}.
+#' The confidence interval bases on the observed value
+#' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
+#'
+#'
+#' For more information see man page on  \code{\link{rho.get}}, \code{\link{Sstat}} and the paper (Gagolewski, Grzegorzewski, 2010).
+#'
+#' @references
+#' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.),
+#' Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
+#'
+#' @title Two-sided approximate confidence interval for the kappa-index
+#' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
+#' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
+#' @param kappaInvDer the derivative of the inverse of \eqn{\kappa}.
+#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param n sample size.
+#' @param conf.level confidence level; defaults 0.95.
+#' @return Vector of length 2 with the computed bounds of the confidence interval.
+#' @seealso \code{\link{ppareto2}}, \code{\link{pareto2.confint.rho}}, \code{\link{Sstat}},
+#' \code{\link{pareto2.confint.rho.approx.lower}},
+#' \code{\link{pareto2.confint.rho.approx.upper}}, \code{\link{rho.get}}
+#' @export
+pareto2.confint.rho.approx <- function(v, kappa, kappaInvDer, s, n, conf.level=0.95)
+{
+	gamma <- 1-conf.level;
+	return(c(
+		pareto2.confint.rho.approx.lower(v,kappa, kappaInvDer,s,n,1-gamma*0.5),
+		pareto2.confint.rho.approx.upper(v,kappa, kappaInvDer,s,n,1-gamma*0.5)
+	));
+}

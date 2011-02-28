@@ -1,0 +1,321 @@
+#' /internal/
+.htest.getpowerupper <- function(n, wyg, cdf, kappa, PARAM_X, PARAM_Y, ...)
+{
+	x <- (0:n);
+
+	stopifnot(length(wyg)==n+1);
+
+	POW <- numeric(length(PARAM_X));
+	for (i in 1:length(PARAM_X))
+	{
+		POW[i] <- 1-sum(dhirsch(x,n,cdf,PARAM_X[i], ...)*phirsch(x+wyg+0.25,n,cdf,PARAM_Y[i], ...));
+
+	}
+
+	return(POW);
+}
+
+#' /internal/
+.htest.acceptregimprove <- function(n, cdf, wyg, j0, j1, alpha, verbose, PARAM, ...)
+{
+	epsbound <- 1e-7;
+	wn <- n+1;
+
+	for (i in j0:j1)
+	{
+		lbound <- ifelse(i>1 && i < wn, min(wyg[i-1], wyg[i+1]), 0)
+		if (wyg[i] > lbound)
+		{
+			repeat
+			{
+				wyg[i] <- wyg[i]-1L;
+				POW <- .htest.getpowerupper(n, wyg, cdf, kappa, PARAM, PARAM, ...);
+				if (max(POW)>alpha)
+				{
+					wyg[i] <- wyg[i]+1L;
+					break;
+				}
+				if (wyg[i] == lbound) break;
+			}
+		}
+
+		if (verbose)
+		{
+			POW <- .htest.getpowerupper(n, wyg, cdf, kappa, PARAM, PARAM, ...);
+			cat(sprintf("%3.0f%% complete in current iteration, q=%.4f.\r", abs((i-j0)/(j1-j0))*100, mean(POW)));
+		}
+	}
+
+	if (verbose)
+	{
+		POW <- .htest.getpowerupper(n, wyg, cdf, kappa, PARAM, PARAM, ...);
+		cat(sprintf("%3.0f%% complete in current iteration, q=%.4f.\r", 100, mean(POW)));
+	}
+
+	return(wyg);
+}
+
+
+#' /internal/
+.pareto2.htest.getK <- function(n, drho, s)
+{
+	# control function:
+	kappa    <- function(x) { pmax(0,pmin(1,x))*n; }
+
+	# kappa-indices (rho) for which to determine the power function
+	RHO <- c(1e-3,seq(1e-3+drho, 1-drho-1e-3, drho), 1-1e-3);
+	nrho <- length(RHO);
+
+	K   <- numeric(nrho);
+	for (i in 1:nrho)
+	{
+		K[i] <- uniroot(function(k,s,targetrho,kappa)
+			{
+				1-ppareto2(kappa(targetrho),k,s)-targetrho;
+			}, c(1e-15,1e15), s, RHO[i], kappa, tol=1e-20)$root;
+	}
+
+	return(K);
+}
+
+
+
+#' Performs \eqn{h}-test for equality of shape parameters
+#' of two samples from the Pareto type-II distributions with known
+#' and equal scale parameters, \eqn{s}.
+#'
+#' Given two equal-sized samples \eqn{X=(X_1,...,X_n)} i.i.d. \eqn{P2(k_x,s)}
+#' and \eqn{Y=(Y_1,...,Y_m)} i.i.d. \eqn{P2(k_y,s)}
+#' this test verifies the null hypothesis
+#' \eqn{H_0: k_x=k_y}
+#' against two-sided or one-sided alternatives, depending
+#' on the value of \code{alternative}.
+#' It bases on the test statistic
+#' \code{T=H(Y)-H(X)}
+#' where \eqn{H} denotes Hirsch's \eqn{h}-index (see \code{\link{index.h}}).
+#'
+#' Note that for \eqn{k_x < k_y}, then \eqn{X} dominates \eqn{Y} stochastically.
+#'
+#' @title Two-sample \eqn{h}-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter
+#' @param x a n-element non-negative numeric vector of data values.
+#' @param y a n-element non-negative numeric vector of data values.
+#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param alternative indicates the alternative hypothesis and must be one of "two.sided" (default), "less", or "greater".
+#' @param significance significance level. See Value for details.
+#' @param wyg precomputed h-dependent acceptation region or \code{NULL}. See Value for details.
+#' @param verbose logical; if \code{TRUE} then the computation progress will be printed.
+#' @param drho power calculation accuracy, a single number in [0.001, 0.1]. The smaller the value the slower computation, but more precise. This is used to determine \code{K} iff \code{K} is not given.
+#' @param K numeric vector; shape parameters for which to calculate the power function or \code{NULL}.
+#' @param improve logical; if \code{TRUE} then the greedy heuristic algorithm for improving the acceptation region will be run.
+#' @return
+#' The list of class \code{power.htest} with the following components is passed as a result:
+#' \tabular{ll}{
+#' \code{statistic} \tab	the value of the test statistic.\cr
+#' \code{result} \tab	either FALSE (accept null hypothesis) or TRUE (reject).\cr
+#' \code{alternative} \tab	a character string describing the alternative hypothesis.\cr
+#' \code{method} \tab	a character string indicating what type of test was performed.\cr
+#' \code{data.name} \tab	a character string giving the name(s) of the data.\cr
+#' \code{wyg} \tab	a numeric vector giving the h-dependent acceptation region used.\cr
+#' \code{size} \tab	size of the test corresponding to \code{wyg}.\cr
+#' \code{qual} \tab	quality of the test corresponding to \code{wyg}, the closer to \code{significance}, the better.\cr
+#' }
+#' Currently no method for determining the p-value of this test is implemented.
+#' @export
+#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.ftest}}, \code{\link{index.h}}
+#' @references
+#' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.),
+#' Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
+pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater"), significance=0.05, wyg=NULL, verbose=TRUE, drho=0.005, K=NULL, improve=TRUE)
+{
+	if (mode(x) != "numeric" || mode(y) != "numeric") stop("non-numeric data given");
+
+	if (length(significance) != 1 || significance <= 0 || significance >= 1) stop("incorrect significance level");
+
+	if (significance > 0.2) warning("'significance' is possibly incorrect");
+
+	alternative <- match.arg(alternative);
+	DNAME <- deparse(substitute(x));
+	DNAME <- paste(DNAME, "and", deparse(substitute(y)));
+
+	x <- x[!is.na(x)];
+	n <- length(x);
+	if (n < 1L || any(x<0)) stop("incorrect 'x' data");
+
+	y <- y[!is.na(y)];
+	if (length(y) < 1L || any(y<0)) stop("incorrect 'y' data");
+
+	if (length(y) != n) stop("non-equal-sized vectors given on input");
+
+	if (s < 1) stop("incorrect scale parameter 's'");
+
+	if (length(drho) != 1 || drho < 0.001 || drho > 0.1)
+		stop("drho should be a single numeric value in [0.000001, 0.1]");
+
+	if (n > 100 && is.null(wyg)) warning("n is large - Do you know what you're doing? It's damn slow! :-)");
+
+	if (!is.null(K) && (mode(K) != "numeric" || length(K) < 10 || any(K<=0) || any(is.infinite(K))))
+		stop("incorrect 'K'");
+
+
+	HY <- index.h(y);
+	HX <- index.h(x);
+	STATISTIC <- HY-HX;
+	names(STATISTIC) <- "H";
+
+	METHOD <- "Two-sample h-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter";
+
+	nm_alternative <- switch(alternative, two.sided = "two-sided",
+			less = "kx < ky",
+			greater = "kx > ky");
+
+	if (alternative == "two.sided") {
+		powerscale <- 2;
+	} else {
+		powerscale <- 1;
+	}
+	alpha <- significance/powerscale;
+	size <- NA;
+	qual <- NA;
+
+	# -----------------------------------------------------------------------
+
+	if (is.null(wyg))
+	{
+		wn <- n+1;     # number of possible h-index values
+
+		if (is.null(K))
+		{
+			# find scale parameters corresponding to kappa-indices
+			if (verbose) cat(sprintf("Determining 'K' for 'drho'=%g...\n", drho));
+			K <- .pareto2.htest.getK(n, drho, s)
+		}
+
+
+		# determine bound of the acceptation region that is independent on the value
+		# of the h-indices (constant 'wyg')
+		if (verbose) cat(sprintf("Determining h-independent bound of the acceptation region...\n"));
+
+		v <- 0L; # initial solution
+		wyg <- rep(v,wn) # a constant function of observed h-index
+		POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+
+		while (max(POW) > alpha)
+		{
+			v <- v+1L;
+			if (v > n) stop("h-independent bound could not be found");
+			wyg <- rep(v,wn) # a constant function of observed h-index
+			POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+		}
+
+		if (verbose)
+		{
+			size <- max(POW)*powerscale;
+			qual <- mean(POW)*powerscale;
+			cat(sprintf("OK, v=%d for n=%d. This gives test size=%f and qual=%f.\n",
+				v, n, size, qual));
+		}
+
+
+		# improve the acceptation region
+		if (improve)
+		{
+			if (verbose) cat(sprintf("Improving h-dependent bounds of the acceptation region...\n"));
+
+			wyg <- .htest.acceptregimprove(n, ppareto2, wyg, 1, wn,  alpha, verbose, K, s);
+			wyg <- .htest.acceptregimprove(n, ppareto2, wyg, wn, 1,  alpha, verbose, K, s);
+
+
+			if (verbose)
+			{
+				POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+				size <- max(POW)*powerscale;
+				qual <- mean(POW)*powerscale;
+				cat(sprintf("This now gives test size=%f and qual=%f.\n",
+					size, qual));
+				stopifnot(max(POW) <= alpha);
+			}
+		}
+
+	} else { # wyg is not null
+
+		if (length(wyg) != n+1 || mode(wyg) != "numeric" || any(wyg<0) || any(wyg>n))
+			stop("incorrect 'wyg' for this test case");
+
+		if (verbose || improve) # check whether given 'wyg' guarantees desired significance level
+		{
+			if (is.null(K))
+			{
+				# find scale parameters corresponding to kappa-indices
+				if (verbose) cat(sprintf("Determining 'K' for 'drho'=%g...\n", drho));
+				K <- .pareto2.htest.getK(n, drho, s)
+			}
+
+			POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+			if (verbose)
+			{
+				size <- max(POW)*powerscale;
+				qual <- mean(POW)*powerscale;
+				cat(sprintf("Given test size=%f and qual=%f for n=%d.\n",
+					size, qual, n));
+			}
+
+			if (max(POW) > alpha) stop("Given 'wyg' does not guarantee desired significance level");
+
+			# improve the acceptation region
+			if (improve)
+			{
+				wn <- n+1;     # number of possible h-index values
+
+				if (verbose) cat(sprintf("Improving h-dependent bounds of the acceptation region...\n"));
+
+				wyg <- .htest.acceptregimprove(n, ppareto2, wyg, 1, wn,  alpha, verbose, K, s);
+				wyg <- .htest.acceptregimprove(n, ppareto2, wyg, wn, 1,  alpha, verbose, K, s);
+
+
+				if (verbose)
+				{
+					POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+					size <- max(POW)*powerscale;
+					qual <- mean(POW)*powerscale;
+					cat(sprintf("This now gives test size=%f and qual=%f.\n",
+						size, qual));
+					stopifnot(max(POW) <= alpha);
+				}
+			}
+		}
+
+
+
+	}
+
+
+	# -----------------------------------------------------------------------
+
+	if (alternative == "two.sided") {
+		if (HX<HY)
+		{
+			RESULT <- (abs(STATISTIC)>wyg[HX+1]);
+		} else {
+			RESULT <- (abs(STATISTIC)>wyg[HY+1]);
+		}
+	} else if (alternative == "less") {
+		if (HX<HY)
+		{
+			RESULT <- FALSE;
+		} else {
+			RESULT <- (abs(STATISTIC)>wyg[HY+1]);
+		}
+	} else {
+		if (HX>HY)
+		{
+			RESULT <- FALSE;
+		} else {
+			RESULT <- (abs(STATISTIC)>wyg[HX+1]);
+		}
+	}
+
+	RVAL <- list(statistic = STATISTIC, result = RESULT, alternative = nm_alternative,
+		method = METHOD, data.name = DNAME, wyg = wyg, size = size, qual = qual);
+	class(RVAL) <- "power.htest";
+	return(RVAL);
+}
