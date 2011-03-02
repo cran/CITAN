@@ -1,6 +1,6 @@
 #' Performs F-test for equality of shape parameters
 #' of two samples from the Pareto type-II distributions with known
-#' and equal scale parameters, \eqn{s}.
+#' and equal scale parameters, \eqn{s>0}.
 #'
 #' Given two samples \eqn{(X_1,...,X_n)} i.i.d. \eqn{P2(k_x,s)}
 #' and \eqn{(Y_1,...,Y_m)} i.i.d. \eqn{P2(k_y,s)}
@@ -8,7 +8,7 @@
 #' \eqn{H_0: k_x=k_y}
 #' against two-sided or one-sided alternatives, depending
 #' on the value of \code{alternative}.
-#' It bases on the test statistic
+#' It bases on test statistic
 #' \code{T=n/m*sum(log(1+Y/m))/sum(log(1+X/n))}
 #' which, under \eqn{H_0}, has the Snedecor's F distribution with \eqn{(2m, 2n)}
 #' degrees of freedom.
@@ -40,7 +40,7 @@
 #' \code{data.name} \tab	a character string giving the name(s) of the data.\cr
 #' }
 #' @export
-#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.htest}}
+#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.htest}}, \code{\link{pareto2.htest.approx}}
 pareto2.ftest <- function(x, y, s, alternative = c("two.sided", "less", "greater"), significance=NULL)
 {
 	alternative <- match.arg(alternative);
@@ -56,7 +56,7 @@ pareto2.ftest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 	if (ny < 1L || any(y<0)) stop("incorrect 'y' data");
 
 
-	if (s < 1) stop("incorrect 's'");
+	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
 
 
 
@@ -78,7 +78,10 @@ pareto2.ftest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 
 		if (significance > 0.2) warning("'significance' is possibly incorrect");
 
-		RESULT <- (STATISTIC<qf(significance*0.5,2*ny,2*nx) || STATISTIC>qf(1-significance*0.5,2*ny,2*nx));
+
+		RESULT <- ifelse(alternative == "two.sided", (STATISTIC<qf(significance*0.5,2*ny,2*nx) || STATISTIC>qf(1-significance*0.5,2*ny,2*nx)),
+		          ifelse(alternative == "greater",    STATISTIC>qf(1-significance,2*ny,2*nx),
+		                                              STATISTIC<qf(significance,2*ny,2*nx)));
 
 		RVAL <- list(statistic = STATISTIC, result = RESULT, alternative = nm_alternative,
 			method = METHOD, data.name = DNAME);

@@ -1,13 +1,18 @@
 #' Performs goodness-of-fit test for the Pareto-II distribution
-#' basing on MMSE estimates (Zhang, Stevens, 2009) and the Anderson-Darling
+#' basing on MLE or MMSE estimates (Zhang, Stevens, 2009) and the Anderson-Darling
 #' or Kolmogorov test.
 #'
-#' This method, proposed by Zhang and Stevens (2009), uses either the function \code{\link[ADGofTest]{ad.test}} from package \code{ADGofTest}
+#' This method, proposed e.g. by Zhang and Stevens (2009), uses either the function \code{\link[ADGofTest]{ad.test}} from package \pkg{ADGofTest}
 #' or \code{\link{ks.test}} to compute the selected test.
-#' It bases on bayesian MMS estimators, see \code{\link{pareto2.zsestimate}}.
+#'
+#' If \code{k} and \code{s} are NULL, it bases on bayesian MMS estimators, see \code{\link{pareto2.zsestimate}}.
+#' If \code{s} is not NULL, then the unbiased maximum likelihood estimator
+#' is used to determine the scale parameter (see \code{\link{pareto2.mlekestimate}}) iff it is not given.
 #'
 #' @title Goodness-of-fit test for the Pareto-II distribution
-#' @param x a numeric vector of data values.
+#' @param x a non-negative numeric vector of data values.
+#' @param k scale parameter, \eqn{k>0} or \code{NULL}.
+#' @param s shape parameter, \eqn{s>0} or \code{NULL}.
 #' @param alternative indicates the alternative hypothesis and must be one of "two.sided" (default), "less", or "greater".
 #' @param method either "anderson-darling" or "kolmogorov".
 #'
@@ -21,10 +26,10 @@
 #' \code{data.name} \tab	a character string giving the name(s) of the data.\cr
 #' }
 #' @export
-#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.zsestimate}}, \code{\link{ks.test}}, \code{\link[ADGofTest]{ad.test}} from package \code{ADGofTest}
+#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.zsestimate}}, \code{\link{pareto2.mlekestimate}}, \code{\link{ks.test}}, \code{\link[ADGofTest]{ad.test}} from package \code{ADGofTest}
 #' @references
 #' Zhang J., Stevens M.A., A New and Efficient Estimation Method for the Generalized Pareto Distribution, Technometrics 51(3), 2009, 316-325.\cr
-pareto2.goftest <- function(x, alternative = c("two.sided", "less", "greater"), method = c("anderson-darling", "kolmogorov"))
+pareto2.goftest <- function(x, k=NULL, s=NULL, alternative = c("two.sided", "less", "greater"), method = c("anderson-darling", "kolmogorov"))
 {
 	alternative <- match.arg(alternative);
 	DNAME <- deparse(substitute(x));
@@ -33,9 +38,21 @@ pareto2.goftest <- function(x, alternative = c("two.sided", "less", "greater"), 
 
 	x <- x[!is.na(x)];
 	nx <- length(x);
-	if (nx < 1L || any(x<0)) stop("incorrect 'x' data");
+	if (nx < 2L || any(x<0)) stop("incorrect 'x' data");
 
-	params <- pareto2.zsestimate(x);
+	if (!is.null(s) && (mode(s) != "numeric" || length(s) != 1 || s <= 0)) stop("'s' should be > 0");
+	if (!is.null(k) && (mode(k) != "numeric" || length(k) != 1 || k <= 0)) stop("'k' should be > 0");
+
+	if (is.null(s)) {
+		if (!is.null(k)) warning("'k' given but 's' not given. ignoring");
+		params <- pareto2.zsestimate(x);
+	} else {
+		if (is.null(k)) k <- pareto2.mlekestimate(x, s);
+		params <- list(k=k, s=s);
+	}
+
+	stopifnot(k > 0 && is.finite(k));
+	stopifnot(s > 0 && is.finite(s));
 
 	RVAL <- switch(method,
 		"anderson-darling" = ad.test(x, ppareto2, params$k, params$s),

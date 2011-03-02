@@ -1,6 +1,6 @@
 #' Computes the approximate (asymptotic) left-sided confidence interval for the kappa-index of
 #' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-#' model with known scale parameter \eqn{s\ge 1}.
+#' model with known scale parameter \eqn{s>0}.
 #' The confidence interval bases on the observed value
 #' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
 #'
@@ -15,7 +15,7 @@
 #' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
 #' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
 #' @param kappaInvDer the derivative of the inverse of \eqn{\kappa}.
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param n sample size.
 #' @param conf.level confidence level; defaults 0.95.
 #' @return Lower bound of the confidence interval.
@@ -29,6 +29,8 @@ pareto2.confint.rho.approx.lower <- function(v, kappa, kappaInvDer, s, n, conf.l
 
 	if (!is.numeric(v) || length(v) != 1)
 		stop("v must be a single numeric value");
+
+	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
 
 	if (v < 1e-6) return(0.0);
 # 	if (v > 1-1e-13) return (1.0);
@@ -61,7 +63,7 @@ pareto2.confint.rho.approx.lower <- function(v, kappa, kappaInvDer, s, n, conf.l
 
 #' Computes the approximate (asymptotic) right-sided confidence interval for the kappa-index of
 #' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-#' model with known scale parameter \eqn{s\ge 1}.
+#' model with known scale parameter \eqn{s>0}.
 #' The confidence interval bases on the observed value
 #' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
 #'
@@ -76,7 +78,7 @@ pareto2.confint.rho.approx.lower <- function(v, kappa, kappaInvDer, s, n, conf.l
 #' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
 #' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
 #' @param kappaInvDer the derivative of the inverse of \eqn{\kappa}.
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param n sample size.
 #' @param conf.level confidence level; defaults 0.95.
 #' @return Upper bound of the confidence interval.
@@ -90,6 +92,8 @@ pareto2.confint.rho.approx.upper <- function(v, kappa, kappaInvDer, s, n, conf.l
 
 	if (!is.numeric(v) || length(v) != 1)
 		stop("v must be a single numeric value");
+
+	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
 
 	if (v > 1-1e-6) return(1.0);
 # 	if (v < 1e-13) return (0.0);
@@ -123,7 +127,7 @@ pareto2.confint.rho.approx.upper <- function(v, kappa, kappaInvDer, s, n, conf.l
 
 #' Computes the approximate (asymptotic) two-sided confidence interval for the kappa-index of
 #' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-#' model with known scale parameter \eqn{s\ge 1}.
+#' model with known scale parameter \eqn{s>0}.
 #' The confidence interval bases on the observed value
 #' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
 #'
@@ -138,7 +142,7 @@ pareto2.confint.rho.approx.upper <- function(v, kappa, kappaInvDer, s, n, conf.l
 #' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
 #' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
 #' @param kappaInvDer the derivative of the inverse of \eqn{\kappa}.
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param n sample size.
 #' @param conf.level confidence level; defaults 0.95.
 #' @return Vector of length 2 with the computed bounds of the confidence interval.

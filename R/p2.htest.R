@@ -1,5 +1,5 @@
 #' /internal/
-.htest.getpowerupper <- function(n, wyg, cdf, kappa, PARAM_X, PARAM_Y, ...)
+.htest.getpowerupper <- function(n, wyg, cdf, PARAM_X, PARAM_Y, ...)
 {
 	x <- (0:n);
 
@@ -29,7 +29,7 @@
 			repeat
 			{
 				wyg[i] <- wyg[i]-1L;
-				POW <- .htest.getpowerupper(n, wyg, cdf, kappa, PARAM, PARAM, ...);
+				POW <- .htest.getpowerupper(n, wyg, cdf, PARAM, PARAM, ...);
 				if (max(POW)>alpha)
 				{
 					wyg[i] <- wyg[i]+1L;
@@ -37,18 +37,18 @@
 				}
 				if (wyg[i] == lbound) break;
 			}
-		}
 
-		if (verbose)
-		{
-			POW <- .htest.getpowerupper(n, wyg, cdf, kappa, PARAM, PARAM, ...);
-			cat(sprintf("%3.0f%% complete in current iteration, q=%.4f.\r", abs((i-j0)/(j1-j0))*100, mean(POW)));
+			if (verbose)
+			{
+				POW <- .htest.getpowerupper(n, wyg, cdf, PARAM, PARAM, ...);
+				cat(sprintf("%3.0f%% complete in current iteration, q=%.4f.\r", abs((i-j0)/(j1-j0))*100, mean(POW)));
+			}
 		}
 	}
 
 	if (verbose)
 	{
-		POW <- .htest.getpowerupper(n, wyg, cdf, kappa, PARAM, PARAM, ...);
+		POW <- .htest.getpowerupper(n, wyg, cdf, PARAM, PARAM, ...);
 		cat(sprintf("%3.0f%% complete in current iteration, q=%.4f.\r", 100, mean(POW)));
 	}
 
@@ -82,7 +82,7 @@
 
 #' Performs \eqn{h}-test for equality of shape parameters
 #' of two samples from the Pareto type-II distributions with known
-#' and equal scale parameters, \eqn{s}.
+#' and equal scale parameters, \eqn{s>0}.
 #'
 #' Given two equal-sized samples \eqn{X=(X_1,...,X_n)} i.i.d. \eqn{P2(k_x,s)}
 #' and \eqn{Y=(Y_1,...,Y_m)} i.i.d. \eqn{P2(k_y,s)}
@@ -90,16 +90,16 @@
 #' \eqn{H_0: k_x=k_y}
 #' against two-sided or one-sided alternatives, depending
 #' on the value of \code{alternative}.
-#' It bases on the test statistic
+#' It bases on test statistic
 #' \code{T=H(Y)-H(X)}
 #' where \eqn{H} denotes Hirsch's \eqn{h}-index (see \code{\link{index.h}}).
 #'
 #' Note that for \eqn{k_x < k_y}, then \eqn{X} dominates \eqn{Y} stochastically.
 #'
 #' @title Two-sample \eqn{h}-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter
-#' @param x a n-element non-negative numeric vector of data values.
-#' @param y a n-element non-negative numeric vector of data values.
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param x an n-element non-negative numeric vector of data values.
+#' @param y an n-element non-negative numeric vector of data values.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param alternative indicates the alternative hypothesis and must be one of "two.sided" (default), "less", or "greater".
 #' @param significance significance level. See Value for details.
 #' @param wyg precomputed h-dependent acceptation region or \code{NULL}. See Value for details.
@@ -121,14 +121,12 @@
 #' }
 #' Currently no method for determining the p-value of this test is implemented.
 #' @export
-#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.ftest}}, \code{\link{index.h}}
+#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.ftest}}, \code{\link{pareto2.htest.approx}}, \code{\link{index.h}}
 #' @references
 #' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.),
 #' Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
 pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater"), significance=0.05, wyg=NULL, verbose=TRUE, drho=0.005, K=NULL, improve=TRUE)
 {
-	if (mode(x) != "numeric" || mode(y) != "numeric") stop("non-numeric data given");
-
 	if (length(significance) != 1 || significance <= 0 || significance >= 1) stop("incorrect significance level");
 
 	if (significance > 0.2) warning("'significance' is possibly incorrect");
@@ -136,6 +134,16 @@ pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 	alternative <- match.arg(alternative);
 	DNAME <- deparse(substitute(x));
 	DNAME <- paste(DNAME, "and", deparse(substitute(y)));
+
+	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
+
+	if (length(drho) != 1 || drho < 0.001 || drho > 0.1)
+		stop("drho should be a single numeric value in [0.000001, 0.1]");
+
+	if (!is.null(K) && (mode(K) != "numeric" || length(K) < 10 || any(K<=0) || any(is.infinite(K))))
+		stop("incorrect 'K'");
+
+	if (mode(x) != "numeric" || mode(y) != "numeric") stop("non-numeric data given");
 
 	x <- x[!is.na(x)];
 	n <- length(x);
@@ -146,19 +154,11 @@ pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 
 	if (length(y) != n) stop("non-equal-sized vectors given on input");
 
-	if (s < 1) stop("incorrect scale parameter 's'");
-
-	if (length(drho) != 1 || drho < 0.001 || drho > 0.1)
-		stop("drho should be a single numeric value in [0.000001, 0.1]");
-
-	if (n > 100 && is.null(wyg)) warning("n is large - Do you know what you're doing? It's damn slow! :-)");
-
-	if (!is.null(K) && (mode(K) != "numeric" || length(K) < 10 || any(K<=0) || any(is.infinite(K))))
-		stop("incorrect 'K'");
+	if (n > 50 && is.null(wyg)) warning("n is large - Do you know what you're doing? It's damn slow! :-)");
 
 
-	HY <- index.h(y);
-	HX <- index.h(x);
+	HY <- index.h(y,disable.check=TRUE);
+	HX <- index.h(x,disable.check=TRUE);
 	STATISTIC <- HY-HX;
 	names(STATISTIC) <- "H";
 
@@ -197,14 +197,14 @@ pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 
 		v <- 0L; # initial solution
 		wyg <- rep(v,wn) # a constant function of observed h-index
-		POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+		POW <- .htest.getpowerupper(n, wyg, ppareto2, K, K, s);
 
 		while (max(POW) > alpha)
 		{
 			v <- v+1L;
 			if (v > n) stop("h-independent bound could not be found");
 			wyg <- rep(v,wn) # a constant function of observed h-index
-			POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+			POW <- .htest.getpowerupper(n, wyg, ppareto2, K, K, s);
 		}
 
 		if (verbose)
@@ -227,7 +227,7 @@ pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 
 			if (verbose)
 			{
-				POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+				POW <- .htest.getpowerupper(n, wyg, ppareto2, K, K, s);
 				size <- max(POW)*powerscale;
 				qual <- mean(POW)*powerscale;
 				cat(sprintf("This now gives test size=%f and qual=%f.\n",
@@ -250,7 +250,7 @@ pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 				K <- .pareto2.htest.getK(n, drho, s)
 			}
 
-			POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+			POW <- .htest.getpowerupper(n, wyg, ppareto2, K, K, s);
 			if (verbose)
 			{
 				size <- max(POW)*powerscale;
@@ -274,7 +274,7 @@ pareto2.htest <- function(x, y, s, alternative = c("two.sided", "less", "greater
 
 				if (verbose)
 				{
-					POW <- .htest.getpowerupper(n, wyg, ppareto2, kappa, K, K, s);
+					POW <- .htest.getpowerupper(n, wyg, ppareto2, K, K, s);
 					size <- max(POW)*powerscale;
 					qual <- mean(POW)*powerscale;
 					cat(sprintf("This now gives test size=%f and qual=%f.\n",

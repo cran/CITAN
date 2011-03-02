@@ -87,7 +87,7 @@
 
 #' Computes the exact right-sided confidence interval for the kappa-index of
 #' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-#' model with known scale parameter \eqn{s\ge 1}.
+#' model with known scale parameter \eqn{s>0}.
 #' The confidence interval bases on the observed value
 #' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
 #'
@@ -101,7 +101,7 @@
 #' @title Right-sided exact confidence interval for the kappa-index
 #' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
 #' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param n sample size.
 #' @param conf.level confidence level; defaults 0.95.
 #' @return Upper bound of the confidence interval.
@@ -115,6 +115,8 @@ pareto2.confint.rho.upper <- function(v, kappa, s, n, conf.level=0.95)
 	# klower = max{k: psstat(v-,n,ppareto2,kappa,k,s)<=gamma}
 
 	gamma <- 1-conf.level;
+
+	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
 
 	if (!is.numeric(v) || length(v) != 1)
 		stop("v must be a single numeric value")
@@ -141,7 +143,7 @@ pareto2.confint.rho.upper <- function(v, kappa, s, n, conf.level=0.95)
 
 #' Computes the exact left-sided confidence interval for the kappa-index of
 #' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-#' model with known scale parameter \eqn{s\ge 1}.
+#' model with known scale parameter \eqn{s>0}.
 #' The confidence interval bases on the observed value
 #' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
 #'
@@ -155,7 +157,7 @@ pareto2.confint.rho.upper <- function(v, kappa, s, n, conf.level=0.95)
 #' @title Left-sided exact confidence interval for the kappa-index
 #' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
 #' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param n sample size.
 #' @param conf.level confidence level; defaults 0.95.
 #' @return Lower bound of the confidence interval.
@@ -170,6 +172,8 @@ pareto2.confint.rho.lower <- function(v, kappa, s, n, conf.level=0.95)
 	# klower = min{k: psstat(v,n,ppareto2,kappa,k,s)>=1-gamma}
 
 	gamma <- 1-conf.level;
+
+	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
 
 	if (!is.numeric(v) || length(v) != 1)
 		stop("v must be a single numeric value")
@@ -198,7 +202,7 @@ pareto2.confint.rho.lower <- function(v, kappa, s, n, conf.level=0.95)
 
 #' Computes the exact two-sided confidence interval for the kappa-index of
 #' a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-#' model with known scale parameter \eqn{s\ge 1}.
+#' model with known scale parameter \eqn{s>0}.
 #' The confidence interval bases on the observed value
 #' of S-statistic w.r.t. to the given control function \eqn{\kappa}.
 #'
@@ -212,7 +216,7 @@ pareto2.confint.rho.lower <- function(v, kappa, s, n, conf.level=0.95)
 #' @title Two-sided exact confidence interval for the kappa-index
 #' @param v observed value of the S-statistic w.r.t. \eqn{\kappa}.
 #' @param kappa an increasing function, \eqn{\kappa}, a so-called control function.
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param n sample size.
 #' @param conf.level confidence level; defaults 0.95.
 #' @return Vector of length 2 with the computed bounds of the confidence interval.

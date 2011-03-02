@@ -4,7 +4,7 @@
 \usage{pareto2.confint.rho.upper(v, kappa, s, n, conf.level=0.95)}
 \description{Computes the exact right-sided confidence interval for the kappa-index of
 a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-model with known scale parameter \eqn{s\ge 1}.
+model with known scale parameter \eqn{s>0}.
 The confidence interval bases on the observed value
 of S-statistic w.r.t. to the given control function \eqn{\kappa}.}
 \details{For more information see man page on  \code{\link{rho.get}}, \code{\link{Sstat}} and the paper (Gagolewski, Grzegorzewski, 2010).}
@@ -15,6 +15,6 @@ Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verl
 \code{\link{pareto2.confint.rho}}, \code{\link{rho.get}}}
 \arguments{\item{v}{observed value of the S-statistic w.r.t. \eqn{\kappa}.}
 \item{kappa}{an increasing function, \eqn{\kappa}, a so-called control function.}
-\item{s}{scale parameter, \eqn{s\ge 1}.}
+\item{s}{scale parameter, \eqn{s>0}.}
 \item{n}{sample size.}
 \item{conf.level}{confidence level; defaults 0.95.}}

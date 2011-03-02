@@ -1,6 +1,6 @@
 #' Computes the exact two-sided confidence interval for the theoretical \eqn{h}-index
 #' of a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-#' model with known scale parameter \eqn{s\ge 1}.
+#' model with known scale parameter \eqn{s>0}.
 #'
 #' The confidence interval bases on the method \code{\link{pareto2.confint.rho}}.
 #'
@@ -15,7 +15,7 @@
 #'
 #' @title Two-sided exact confidence interval for the theoretical h-index
 #' @param h observed value of the \eqn{h}-index
-#' @param s scale parameter, \eqn{s\ge 1}.
+#' @param s scale parameter, \eqn{s>0}.
 #' @param n sample size.
 #' @param conf.level confidence level; defaults 0.95.
 #' @return Vector of length 2 with the computed bounds of the confidence interval.
@@ -25,6 +25,8 @@ pareto2.confint.h <- function(h, s, n, conf.level=0.95)
 {
 	if (length(h) != 1 || h < 0 || h > n)
 		stop("Incorrect h value!");
+
+	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
 
 	kappa    <- function(x) { pmax(0,pmin(1,x))*gamma; }
 	gamma <- 1-conf.level;

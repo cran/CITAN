@@ -1,10 +1,9 @@
 \name{CITAN-package}
 \title{CITation ANalysis toolpack}
-\description{CITation ANalysis toolpack.}
-\details{CITAN is a library of functions useful in --- but not limited to ---
+\description{CITAN is a library of functions useful in --- but not limited to ---
 quantitative research in the field of scientometrics.
-
-Fair and objective assessment methods of individual scientists
+It also contains various methods for dealing with the Pareto-type II distribution.}
+\details{Fair and objective assessment methods of individual scientists
 had become the focus of scientometricians' attention since the
 very beginning of their discipline. A quantitative expression
 of some publication-citation process
@@ -65,8 +64,10 @@ Tools for the Pareto-type II family:
 for general functions dealing with the Pareto distribution of the second kind,
 including the c.d.f., p.d.f, quantiles and random deviates,
 \item \code{\link{pareto2.htest}} --- two-sample \eqn{h}-test for equality of shape parameters based on the difference of \eqn{h}-indices,
+\item \code{\link{pareto2.htest.approx}} --- two-sample asymptotic (approximate) \eqn{h}-test,
 \item \code{\link{pareto2.ftest}} --- two-sample exact F-test for equality of shape parameters,
 \item \code{\link{pareto2.zsestimate}} --- estimation of parameters using the Bayesian method (MMSE) developed by Zhang and Stevens (2009),
+\item \code{\link{pareto2.mlekestimate}} --- estimation of shape parameter using the unbiased MLE,
 \item \code{\link{pareto2.goftest}} --- goodness-of-fit tests,
 \item \code{\link{pareto2.confint.rho}} and \code{\link{pareto2.confint.rho.approx}} --- exact and approximate (asymptotic)
 confidence intervals for the \eqn{\kappa}-index basing on S-statistics,
@@ -81,28 +82,16 @@ see \code{\link{plot.citfun}}, \code{\link{curve.add.rp}}, and \code{\link{curve
 
 
 Please feel free to send any comments and suggestions (e.g.
-to include some new bibliometric impact indices) to the author.
+to include some new bibliometric impact indices) to the author
+(see also \url{http://www.ibspan.waw.pl/~gagolews}).
 
-For a complete list of functions, use \code{library(help="CITAN")}.}
+For a complete list of functions, use \code{library(help="CITAN")}.
+
+Keywords: Hirsch's h-index, Egghe's g-index, L-statistics, S-statistics, bibliometrics, scientometrics, informetrics,
+webometrics, aggregation operators, impact functions, impact assessment.}
 \alias{CITAN}
 \docType{package}
 \author{Marek Gagolewski \email{gagolews@ibspan.waw.pl}}
-\keyword{Hirsch}
-\keyword{h-index,}
-\keyword{Egghe}
-\keyword{g-index,}
-\keyword{L-statistics,}
-\keyword{S-statistics,}
-\keyword{bibliometrics,}
-\keyword{scientometrics,}
-\keyword{informetrics,}
-\keyword{webometrics,}
-\keyword{aggregation}
-\keyword{operators,}
-\keyword{impact}
-\keyword{functions,}
-\keyword{impact}
-\keyword{assessment}
 \references{Dubois D., Prade H., Testemale C., Weighted fuzzy pattern matching, Fuzzy Sets and Systems 28, s. 313-331, 1988.\cr
 Egghe L., Theory and practise of the g-index, Scientometrics 69(1), 131-152, 2006.\cr
 Gagolewski M., Grzegorzewski P., Possibilistic analysis of arity-monotonic aggregation operators and its relation to bibliometric impact assessment of individuals, International Journal of Approximate Reasoning, doi:10.1016/j.ijar.2011.01.010.\cr

@@ -4,7 +4,7 @@
 \usage{pareto2.confint.h(h, s, n, conf.level=0.95)}
 \description{Computes the exact two-sided confidence interval for the theoretical \eqn{h}-index
 of a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
-model with known scale parameter \eqn{s\ge 1}.}
+model with known scale parameter \eqn{s>0}.}
 \details{The confidence interval bases on the method \code{\link{pareto2.confint.rho}}.
 
 The \dfn{Theoretical \eqn{h}-index} for a sequence of \eqn{n} i.i.d. random variables
@@ -16,6 +16,6 @@ Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verl
 \value{Vector of length 2 with the computed bounds of the confidence interval.}
 \seealso{\code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}}, \code{\link{pareto2.confint.rho}}}
 \arguments{\item{h}{observed value of the \eqn{h}-index}
-\item{s}{scale parameter, \eqn{s\ge 1}.}
+\item{s}{scale parameter, \eqn{s>0}.}
 \item{n}{sample size.}
 \item{conf.level}{confidence level; defaults 0.95.}}

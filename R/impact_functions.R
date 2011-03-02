@@ -20,7 +20,10 @@
 #' @param disable.check logical; \code{TRUE} to disable some validity checks on the input vector; defaults \code{FALSE}.
 #' @param algorithm type of algorithm, "linear-time" or "log-time" (default).
 #' @return The function returns a single number or NA if improper input has been given.
-#' @seealso \code{\link{index.g}}, \code{\link{index.rp}}, \code{\link{index.lp}}, \code{\link{Sstat}}, \code{\link{Sstat2}}, \code{\link{phirsch}}, \code{\link{dhirsch}}, \code{\link{pareto2.confint.h}}, \code{\link{pareto2.htest}}
+#' @seealso
+#' \code{\link{index.g}}, \code{\link{index.rp}}, \code{\link{index.lp}}, \code{\link{Sstat}}, \code{\link{Sstat2}},
+#' \code{\link{phirsch}}, \code{\link{dhirsch}}, \code{\link{pareto2.confint.h}}, \code{\link{pareto2.htest}},
+#' \code{\link{pareto2.htest.approx}}
 #'
 #' @examples
 #' authors <- list(  # a list of numeric sequences
@@ -149,14 +152,14 @@ index.rp <- function(x, p=Inf, sorted.dec=FALSE, disable.check=FALSE)
 		x <- x[!is.na(x)];
 	}
 
+	if (mode(p) != "numeric" || length(p)!=1 || p < 1) stop("'p' should be a single numeric value >= 1");
+
 	if (!sorted.dec)
 		x <- sort(x, decreasing=TRUE);
 
-	if (p < 1)
+	if (is.finite(p))
 	{
-		return(NA);
-	} else if (is.finite(p))
-	{
+		if (p > 50) warning("'p' is quite large. possible accuracy problems. maybe you should try 'p'==Inf?");
 		.C("index_rp_finite", as.double(x), as.integer(length(x)), as.double(p), out=double(1), DUP=FALSE, PACKAGE="CITAN")$out;
 	} else
 	{
@@ -215,14 +218,14 @@ index.lp <- function(x, p=Inf, sorted.dec=FALSE, disable.check=FALSE)
 		x <- x[!is.na(x)];
 	}
 
+	if (mode(p) != "numeric" || length(p)!=1 || p < 1) stop("'p' should be a single numeric value >= 1");
+
 	if (!sorted.dec)
 		x <- sort(x, decreasing=TRUE);
 
-	if (p < 1)
+	if (is.finite(p))
 	{
-		return(NA);
-	} else if (is.finite(p))
-	{
+		if (p > 50) warning("'p' is quite large. possible accuracy problems. maybe you should try 'p'==Inf?");
 		.C("index_lp_finite", as.double(x), as.integer(length(x)), as.double(p), integer(length(x)+1), out=double(2), DUP=FALSE, PACKAGE="CITAN")$out;
 	} else
 	{
