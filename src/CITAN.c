@@ -5,7 +5,7 @@
 
 
 #include "impact_functions.h"
-
+#include "pareto2.h"
 
 static const R_CMethodDef cMethods[] = {
 	{"index_h", (DL_FUNC)&index_h, 3},
@@ -16,6 +16,8 @@ static const R_CMethodDef cMethods[] = {
 	{"index_lp_finite", (DL_FUNC)&index_lp_finite, 5},
 	{"index_rp_infinite", (DL_FUNC)&index_rp_infinite, 3},
 	{"index_lp_infinite", (DL_FUNC)&index_lp_infinite, 3},
+	{"pareto2_phirsch", (DL_FUNC)&pareto2_phirsch, 5},
+	{"pareto2_dhirsch", (DL_FUNC)&pareto2_dhirsch, 5},
 	{NULL, NULL, 0}
 };
 

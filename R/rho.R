@@ -1,4 +1,4 @@
-#' Numerically computes the kappa-index of a given continuous cumulative distribution function
+#' Numerically computes the rho-index of a given continuous cumulative distribution function
 #'
 #' Let \eqn{F} be a continuous c.d.f that is strictly increasing on \eqn{[a,b]},
 #' where \eqn{a=\inf\{x: F(x)>0\}}{a=inf{x: F(x)>0}} and
@@ -9,7 +9,7 @@
 #' is continuous and strictly increasing
 #' and which fulfills \eqn{\kappa(0)=c} and \eqn{\kappa(1)=d}.
 #'
-#' The \dfn{\eqn{\kappa}-index} of the distribution \eqn{F} (Gagolewski, Grzegorzewski, 2010)
+#' The \dfn{\eqn{\rho}-index} of the distribution \eqn{F} (Gagolewski, Grzegorzewski, 2010)
 #' is a number \eqn{\rho_\kappa\in(0,1)}{0<\rho_\kappa<1}
 #' such that
 #' \deqn{\rho_\kappa=1-F(\kappa(\rho_\kappa)).}
@@ -22,7 +22,7 @@
 #' @references
 #' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.), Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
 #'
-#' @title Kappa-index of a continuous probability distribution
+#' @title Rho-index of a continuous probability distribution
 #' @param cdf a cumulative distribution function, e.g. \code{\link{ppareto2}}.
 #' @param kappa an increasing function, \eqn{\kappa} (see Details), a so-called control function.
 #' @param ... optional arguments to \code{cdf}.

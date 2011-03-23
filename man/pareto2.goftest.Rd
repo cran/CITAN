@@ -1,8 +1,7 @@
 \name{pareto2.goftest}
 \alias{pareto2.goftest}
 \title{Goodness-of-fit test for the Pareto-II distribution}
-\usage{pareto2.goftest(x, k, s, alternative=c("two.sided", "less", "greater"),
-    method=c("anderson-darling", "kolmogorov"))}
+\usage{pareto2.goftest(x, k, s, method=c("anderson-darling", "kolmogorov"))}
 \description{Performs goodness-of-fit test for the Pareto-II distribution
 basing on MLE or MMSE estimates (Zhang, Stevens, 2009) and the Anderson-Darling
 or Kolmogorov test.}
@@ -25,5 +24,4 @@ is used to determine the scale parameter (see \code{\link{pareto2.mlekestimate}}
 \arguments{\item{x}{a non-negative numeric vector of data values.}
 \item{k}{scale parameter, \eqn{k>0} or \code{NULL}.}
 \item{s}{shape parameter, \eqn{s>0} or \code{NULL}.}
-\item{alternative}{indicates the alternative hypothesis and must be one of "two.sided" (default), "less", or "greater".}
 \item{method}{either "anderson-darling" or "kolmogorov".}}

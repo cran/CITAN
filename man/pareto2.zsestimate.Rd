@@ -10,6 +10,6 @@ Zhang and Stevens (2009).}
 \code{k} \tab	the estimated parameter of shape.\cr
 \code{s} \tab	the estimated parameter of scale.\cr
 }}
-\seealso{\code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.mlekestimate}}}
+\seealso{\code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.mlekestimate}}, \code{\link{pareto2.mleksestimate}}}
 \references{Zhang J., Stevens M.A., A New and Efficient Estimation Method for the Generalized Pareto Distribution, Technometrics 51(3), 2009, 316-325.\cr}
 \arguments{\item{x}{a non-negative numeric vector.}}

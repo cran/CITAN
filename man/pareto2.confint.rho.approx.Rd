@@ -1,9 +1,9 @@
 \name{pareto2.confint.rho.approx}
 \alias{pareto2.confint.rho.approx}
-\title{Two-sided approximate confidence interval for the kappa-index}
+\title{Two-sided approximate confidence interval for the rho-index}
 \usage{pareto2.confint.rho.approx(v, kappa, kappaInvDer, s, n,
-    conf.level=0.95)}
-\description{Computes the approximate (asymptotic) two-sided confidence interval for the kappa-index of
+    conf.level=0.95, tol=1e-20)}
+\description{Computes the approximate (asymptotic) two-sided confidence interval for the \eqn{\rho}-index of
 a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
 model with known scale parameter \eqn{s>0}.
 The confidence interval bases on the observed value
@@ -20,4 +20,5 @@ Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verl
 \item{kappaInvDer}{the derivative of the inverse of \eqn{\kappa}.}
 \item{s}{scale parameter, \eqn{s>0}.}
 \item{n}{sample size.}
-\item{conf.level}{confidence level; defaults 0.95.}}
+\item{conf.level}{confidence level; defaults 0.95.}
+\item{tol}{the desired accuracy (convergence tolerance).}}

@@ -1,10 +1,27 @@
 CITAN PACKAGE CHANGELOG
 
 
+2011.03-2  /2011-03-23/
+	* pareto2.phirsch(), pareto2.dhirsch() - time-optimized versions
+	     of phirsch() and dhirsch() for the Pareto-Type II distribution
+	* pareto2.htest()        - time-optimized
+	     (e.g. 48.26 vs 2.72 sec. for n=25, 22.44 vs 1.40 sec. for n=10)
+	* pareto2.goftest()      - minor bug fix; removed `alternative' parameter
+	     as ad.test() does not support it
+	* pareto2.zsestimate()   - minor bug fix; allow shape paramter 0<s<=1
+	* pareto2.mleksestimate(), discrpareto2.mleksestimate,
+	     discrpareto2.mlekestimate - new functions
+	     to find the parameter etimates for the Type II-Pareto
+	     distribition and its discretized version using the MLE.
+	* pareto2.confint.h()    - changed method of calculation
+	* pareto2.confint.h.lower(), pareto2.confint.h.upper() - new functions
+	     for exact lower- and upper confidence bounds of the theoretical h-index
+	     given the value of a (sample) h-index
+
 2011.03-1  /2011-03-02/
 	* pareto2.htest.approx() - new function: Two-sample asymptotic h-test
 	     for equality of shape parameters for Type II-Pareto distributions
-	     with known common scale parameter
+	     with known scale parameter
 	* pareto2.mlekestimate() - new function to estimate the shape parameter
 	     of the Pareto-type II distribution using unbiased MLE
 	* pareto2.goftest()      - params 'k' and 's' added

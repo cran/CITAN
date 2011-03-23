@@ -13,7 +13,6 @@
 #' @param x a non-negative numeric vector of data values.
 #' @param k scale parameter, \eqn{k>0} or \code{NULL}.
 #' @param s shape parameter, \eqn{s>0} or \code{NULL}.
-#' @param alternative indicates the alternative hypothesis and must be one of "two.sided" (default), "less", or "greater".
 #' @param method either "anderson-darling" or "kolmogorov".
 #'
 #' @return
@@ -29,9 +28,10 @@
 #' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.zsestimate}}, \code{\link{pareto2.mlekestimate}}, \code{\link{ks.test}}, \code{\link[ADGofTest]{ad.test}} from package \code{ADGofTest}
 #' @references
 #' Zhang J., Stevens M.A., A New and Efficient Estimation Method for the Generalized Pareto Distribution, Technometrics 51(3), 2009, 316-325.\cr
-pareto2.goftest <- function(x, k=NULL, s=NULL, alternative = c("two.sided", "less", "greater"), method = c("anderson-darling", "kolmogorov"))
+pareto2.goftest <- function(x, k=NULL, s=NULL, #alternative = c("two.sided", "less", "greater"),
+	method = c("anderson-darling", "kolmogorov"))
 {
-	alternative <- match.arg(alternative);
+# 	alternative <- match.arg(alternative);
 	DNAME <- deparse(substitute(x));
 
 	method <- match.arg(method);
@@ -51,8 +51,8 @@ pareto2.goftest <- function(x, k=NULL, s=NULL, alternative = c("two.sided", "les
 		params <- list(k=k, s=s);
 	}
 
-	stopifnot(k > 0 && is.finite(k));
-	stopifnot(s > 0 && is.finite(s));
+	stopifnot(params$k > 0 && is.finite(params$k));
+	stopifnot(params$s > 0 && is.finite(params$s));
 
 	RVAL <- switch(method,
 		"anderson-darling" = ad.test(x, ppareto2, params$k, params$s),

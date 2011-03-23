@@ -11,7 +11,7 @@
 #' \code{s} \tab	the estimated parameter of scale.\cr
 #' }
 #' @export
-#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.mlekestimate}}
+#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.mlekestimate}}, \code{\link{pareto2.mleksestimate}}
 #' @references
 #' Zhang J., Stevens M.A., A New and Efficient Estimation Method for the Generalized Pareto Distribution, Technometrics 51(3), 2009, 316-325.\cr
 pareto2.zsestimate <- function(x)
@@ -45,7 +45,7 @@ pareto2.zsestimate <- function(x)
 	s <- -1/b;
 
 	if (k<=0)  warning("estimated shape parameter <= 0");
-	if (s<=1)  warning("estimated scale parameter <= 1");
+	if (s<=0)  warning("estimated scale parameter <= 0");
 
 	list(k=k, s=s);
 }
@@ -60,7 +60,7 @@ pareto2.zsestimate <- function(x)
 #' @return
 #' A single numeric value is returned, the unbiased ML estimator of \eqn{k}.
 #' @export
-#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.zsestimate}}
+#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.zsestimate}}, \code{\link{pareto2.mleksestimate}}
 pareto2.mlekestimate <- function(x, s)
 {
 	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
@@ -75,4 +75,53 @@ pareto2.mlekestimate <- function(x, s)
 	return((n-1)/sum(log(1+x/s)));
 }
 
+
+
+#' Finds the maximum likelihood estimator of the type II Pareto distribution's
+#' shape parameter \eqn{k} and scale parameter \eqn{s}.
+#'
+#' Note that the maximum of the likelihood function may not exist
+#' for some input vectors.
+#'
+#' @title Estimation of shape and scale parameters for the Pareto-II distribution (MLE)
+#' @param x a non-negative numeric vector.
+#' @param tol the desired accuracy (convergence tolerance).
+#' @param smin lower bound for the scale parameter.
+#' @param smax upper bound for the scale parameter.
+#' @return
+#' The list  with the following components is passed as a result:
+#' \tabular{ll}{
+#' \code{k} \tab	the estimated parameter of shape.\cr
+#' \code{s} \tab	the estimated parameter of scale.\cr
+#' }
+#' or \code{NA} if the maximum of the likelihood function does not exist.
+#' @export
+#' @seealso \code{\link{dpareto2}}, \code{\link{pareto2.goftest}}, \code{\link{pareto2.zsestimate}}
+pareto2.mleksestimate <- function(x, tol=1e-20, smin=1e-4, smax=20)
+{
+	if (mode(x) != "numeric") stop("'x' should be numeric");
+	x <- x[!is.na(x)];
+	n <- length(x);
+
+	if (n < 2) stop("'x' should be of length at least 2");
+	if (any(x < 0.0)) stop("'x' should be non-negative");
+
+
+	flow <- 1+sum(log(1+x/smin))/n-n/sum(1/(1+x/smin));
+	fupp <- 1+sum(log(1+x/smax))/n-n/sum(1/(1+x/smax));
+
+	if (flow*fupp >= 0)
+	{
+		warning("Maximum of the likelihood function does not exist.");
+		return(list(k=NA, s=NA));
+	}
+
+	s <- uniroot( function(s,x) {
+		dx <- 1+x/s;
+		1+sum(log(dx))/n-n/sum(1/dx);
+	}, c(smin, smax), x, f.lower=flow, f.upper=fupp, tol=tol)$root;
+	k <- (n/sum(log(1+x/s)));
+
+	list(k=k, s=s);
+}
 
