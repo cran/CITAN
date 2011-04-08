@@ -1,6 +1,6 @@
 \name{curve.add.lp}
 \alias{curve.add.lp}
-\title{Draw the \eqn{l_p}-curve of given size}
+\title{Draw the l_p-curve of given size}
 \usage{curve.add.lp(ab, p=Inf, n=101, ...)}
 \description{The \eqn{l_p}-curve appears in the definition of the \eqn{l_p}-index
 (see Gagolewski, Grzegorzewski, 2009) and the \code{\link{index.lp}} function.}

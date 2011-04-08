@@ -1,6 +1,6 @@
 \name{curve.add.rp}
 \alias{curve.add.rp}
-\title{Draw the \eqn{r_p}-curve of given radius}
+\title{Draw the r_p-curve of given radius}
 \usage{curve.add.rp(r, p=Inf, n=101, ...)}
 \description{The \eqn{r_p}-curve appears in the definition of the \eqn{r_p}-index
 (see Gagolewski, Grzegorzewski, 2009) and the \code{\link{index.rp}} function.}

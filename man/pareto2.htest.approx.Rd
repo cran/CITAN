@@ -1,6 +1,6 @@
 \name{pareto2.htest.approx}
 \alias{pareto2.htest.approx}
-\title{Two-sample asymptotic \eqn{h}-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter}
+\title{Two-sample asymptotic h-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter}
 \usage{pareto2.htest.approx(x, y, s, alternative=c("two.sided", "less",
     "greater"), significance)}
 \description{Performs asymptotic (approximate) \eqn{h}-test for equality of shape parameters

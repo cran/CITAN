@@ -1,6 +1,6 @@
 \name{index.rp}
 \alias{index.rp}
-\title{The \eqn{r_p}-index}
+\title{The r_p-index}
 \usage{index.rp(x, p=Inf, sorted.dec=FALSE, disable.check=FALSE)}
 \description{Computes the \eqn{r_p}-index of a numeric vector for given \eqn{p}.}
 \details{Given a sequence of \eqn{n} non-negative numbers \eqn{x=(x_1,\dots,x_n)},

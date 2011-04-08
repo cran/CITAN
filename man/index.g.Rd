@@ -1,6 +1,6 @@
 \name{index.g}
 \alias{index.g}
-\title{Egghe's \eqn{g}-index}
+\title{Egghe's g-index}
 \usage{index.g(x, sorted.dec=FALSE, disable.check=FALSE)}
 \description{Computes the "Classical" \eqn{g}-index of a numeric vector.}
 \details{Given a sequence of \eqn{n} non-negative numbers \eqn{x=(x_1,\dots,x_n)},

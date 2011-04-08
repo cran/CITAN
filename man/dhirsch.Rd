@@ -1,6 +1,6 @@
 \name{dhirsch}
 \alias{dhirsch}
-\title{Distribution of the \eqn{h}-index - p.m.f.}
+\title{Distribution of the h-index - p.m.f.}
 \usage{dhirsch(x, n, cdf, ...)}
 \description{The probability mass function of Hirsch's \eqn{h}-index
 for sample of size \code{n} in an i.i.d. model with common increasing and continuous c.d.f. \eqn{F} defined on \eqn{[0,\infty)}.}

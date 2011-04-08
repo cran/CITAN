@@ -1,10 +1,29 @@
+## This file is part of the CITAN library.
+##
+## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+##
+##
+## CITAN is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## CITAN is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+## GNU Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
+
+
 #' The probability mass function of Hirsch's \eqn{h}-index
 #' for sample of size \code{n} in an i.i.d. model with common increasing and continuous c.d.f. \eqn{F} defined on \eqn{[0,\infty)}.
 #'
 #' @references
 #' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.), Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
 #'
-#' @title Distribution of the \eqn{h}-index - p.m.f.
+#' @title Distribution of the h-index - p.m.f.
 #' @param x numeric vector.
 #' @param n sample size.
 #' @param cdf a continuous cumulative distribution function \eqn{F}, e.g. \code{\link{ppareto2}}.
@@ -24,7 +43,7 @@ dhirsch <- function(x, n, cdf, ...)
 #' @references
 #' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.), Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
 #'
-#' @title Distribution of the \eqn{h}-index - c.d.f.
+#' @title Distribution of the h-index - c.d.f.
 #' @param x numeric vector.
 #' @param n sample size.
 #' @param cdf a continuous cumulative distribution function \eqn{F}, e.g. \code{\link{ppareto2}}.
@@ -50,10 +69,12 @@ phirsch <- function(x, n, cdf, ...)
 #' The cumulative distribution function of Hirsch's \eqn{h}-index
 #' for sample of size \code{n} in an i.i.d. Pareto-Type II model.
 #'
+#' This is a significantly faster (written in C) version of the more general function \code{\link{phirsch}}.
+#'
 #' @references
 #' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.), Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
 #'
-#' @title Distribution of the \eqn{h}-index - c.d.f.
+#' @title Distribution of the h-index - c.d.f.
 #' @param x numeric vector.
 #' @param n sample size.
 #' @param k shape parameter, \eqn{k>0}.
@@ -74,10 +95,12 @@ pareto2.phirsch <- function(x, n, k, s)
 #' The probability mass function of Hirsch's \eqn{h}-index
 #' for sample of size \code{n} in an i.i.d. Pareto-Type II model.
 #'
+#' This is a significantly faster (written in C) version of the more general function \code{\link{dhirsch}}.
+#'
 #' @references
 #' Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.), Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr
 #'
-#' @title Distribution of the \eqn{h}-index - p.m.f.
+#' @title Distribution of the h-index - p.m.f.
 #' @param x numeric vector.
 #' @param n sample size.
 #' @param k shape parameter, \eqn{k>0}.

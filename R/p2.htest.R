@@ -1,3 +1,22 @@
+## This file is part of the CITAN library.
+##
+## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+##
+##
+## CITAN is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## CITAN is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+## GNU Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
+
+
 # #' /internal-generalized version/
 # .htest.getpowerupper <- function(n, wyg, cdf, PARAM_X, PARAM_Y, ...)
 # {
@@ -317,14 +336,14 @@
 #'
 #' Note that for \eqn{k_x < k_y}, then \eqn{X} dominates \eqn{Y} stochastically.
 #'
-#' @title Two-sample \eqn{h}-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter
+#' @title Two-sample h-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter
 #' @param x an n-element non-negative numeric vector of data values.
 #' @param y an n-element non-negative numeric vector of data values.
 #' @param s scale parameter, \eqn{s>0}.
 #' @param alternative indicates the alternative hypothesis and must be one of "two.sided" (default), "less", or "greater".
 #' @param significance significance level. See Value for details.
 #' @param wyg precomputed h-dependent acceptation region or \code{NULL}. See Value for details.
-#' @param verbose logical; if \code{TRUE} then the computation progress will be printed.
+#' @param verbose logical; if \code{TRUE} then the computation progress will be printed out.
 #' @param drho power calculation accuracy, a single number in [0.001, 0.1]. The smaller the value the slower computation, but more precise. This is used to determine \code{K} iff \code{K} is not given.
 #' @param K numeric vector; shape parameters for which to calculate the power function or \code{NULL}.
 #' @param improve logical; if \code{TRUE} then the greedy heuristic algorithm for improving the acceptation region will be run.

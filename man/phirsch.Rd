@@ -1,6 +1,6 @@
 \name{phirsch}
 \alias{phirsch}
-\title{Distribution of the \eqn{h}-index - c.d.f.}
+\title{Distribution of the h-index - c.d.f.}
 \usage{phirsch(x, n, cdf, ...)}
 \description{The cumulative distribution function of Hirsch's \eqn{h}-index
 for sample of size \code{n} in an i.i.d. model with common increasing and continuous c.d.f. \eqn{F} defined on \eqn{[0,\infty)}.}

@@ -1,3 +1,22 @@
+## This file is part of the CITAN library.
+##
+## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+##
+##
+## CITAN is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## CITAN is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+## GNU Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
+
+
 #' Computes the exact right-sided confidence interval for the theoretical \eqn{h}-index
 #' of a probability distribution in an \eqn{(X_1,\dots,X_n)} i.i.d. Pareto-type II
 #' model with known scale parameter \eqn{s>0}.

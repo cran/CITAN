@@ -1,6 +1,6 @@
 \name{index.h}
 \alias{index.h}
-\title{Hirsch's \eqn{h}-index}
+\title{Hirsch's h-index}
 \usage{index.h(x, sorted.dec=FALSE, disable.check=FALSE,
     algorithm=c("log-time", "linear-time"))}
 \description{Computes the "Classical" \eqn{h}-index of a numeric vector.}

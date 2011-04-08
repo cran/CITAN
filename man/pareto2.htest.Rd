@@ -1,6 +1,6 @@
 \name{pareto2.htest}
 \alias{pareto2.htest}
-\title{Two-sample \eqn{h}-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter}
+\title{Two-sample h-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter}
 \usage{pareto2.htest(x, y, s, alternative=c("two.sided", "less", "greater"),
     significance=0.05, wyg, verbose=TRUE, drho=0.005, K, improve=TRUE)}
 \description{Performs \eqn{h}-test for equality of shape parameters
@@ -38,7 +38,7 @@ Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verl
 \item{alternative}{indicates the alternative hypothesis and must be one of "two.sided" (default), "less", or "greater".}
 \item{significance}{significance level. See Value for details.}
 \item{wyg}{precomputed h-dependent acceptation region or \code{NULL}. See Value for details.}
-\item{verbose}{logical; if \code{TRUE} then the computation progress will be printed.}
+\item{verbose}{logical; if \code{TRUE} then the computation progress will be printed out.}
 \item{drho}{power calculation accuracy, a single number in [0.001, 0.1]. The smaller the value the slower computation, but more precise. This is used to determine \code{K} iff \code{K} is not given.}
 \item{K}{numeric vector; shape parameters for which to calculate the power function or \code{NULL}.}
 \item{improve}{logical; if \code{TRUE} then the greedy heuristic algorithm for improving the acceptation region will be run.}}

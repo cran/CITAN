@@ -1,6 +1,6 @@
 \name{index.lp}
 \alias{index.lp}
-\title{The \eqn{l_p}-index}
+\title{The l_p-index}
 \usage{index.lp(x, p=Inf, sorted.dec=FALSE, disable.check=FALSE)}
 \description{Computes the \eqn{l_p}-index of a numeric vector for given \eqn{p}.}
 \details{Given a sequence of \eqn{n} non-negative numbers \eqn{x=(x_1,\dots,x_n)},

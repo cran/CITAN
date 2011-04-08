@@ -1,3 +1,22 @@
+## This file is part of the CITAN library.
+##
+## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+##
+##
+## CITAN is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## CITAN is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+## GNU Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
+
+
 #' The citation function of a vector \eqn{x=(x_1,\dots,x_n)}
 #' is a mapping \deqn{\pi(y)=x_{(n-\lfloor y+1\rfloor)}}{\pi(y)=x_{(n-floor(y+1)+1)}}
 #' defined for \eqn{0\le y<n}, where \eqn{x_{(i)}} denotes the
@@ -54,7 +73,7 @@ plot.citfun <- function(x, ..., xmarg=10, add=F, xlab="", ylab="", main="", ylim
 #' The \eqn{r_p}-curve appears in the definition of the \eqn{r_p}-index
 #' (see Gagolewski, Grzegorzewski, 2009) and the \code{\link{index.rp}} function.
 #'
-#' @title Draw the \eqn{r_p}-curve of given radius
+#' @title Draw the r_p-curve of given radius
 #' @param r radius of the \eqn{r_p}-curve; \eqn{r>0}.
 #' @param p index order, \eqn{p \in [1,\infty]}{p in [1,\infty]}; defaults \eqn{\infty} (\code{Inf}).
 #' @param n integer; the maximal number of values at which to evaluate the underlying function.
@@ -95,7 +114,7 @@ curve.add.rp <- function(r, p=Inf, n=101, ...)
 #' The \eqn{l_p}-curve appears in the definition of the \eqn{l_p}-index
 #' (see Gagolewski, Grzegorzewski, 2009) and the \code{\link{index.lp}} function.
 #'
-#' @title Draw the \eqn{l_p}-curve of given size
+#' @title Draw the l_p-curve of given size
 #' @param ab size of the \eqn{l_p}-curve; positive numeric vector of length 2.
 #' @param p index order, \eqn{p \in [1,\infty]}{p in [1,\infty]}; defaults \eqn{\infty} (\code{Inf}).
 #' @param n integer; the maximal number of values at which to evaluate the underlying function.

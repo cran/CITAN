@@ -1,3 +1,22 @@
+## This file is part of the CITAN library.
+##
+## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+##
+##
+## CITAN is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## CITAN is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+## GNU Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
+
+
 #' Computes the "Classical" \eqn{h}-index of a numeric vector.
 #'
 #' Given a sequence of \eqn{n} non-negative numbers \eqn{x=(x_1,\dots,x_n)},
@@ -14,7 +33,7 @@
 #'
 #' @references Hirsch J.E., An index to quantify individual's scientific research output, Proceedings of the National Academy of Sciences 102(46), 16569-16572, 2005.\cr
 #'
-#' @title Hirsch's \eqn{h}-index
+#' @title Hirsch's h-index
 #' @param x a non-negative numeric vector.
 #' @param sorted.dec logical; \code{TRUE} if the vector has already been sorted non-increasingly; defaults \code{FALSE}.
 #' @param disable.check logical; \code{TRUE} to disable some validity checks on the input vector; defaults \code{FALSE}.
@@ -77,7 +96,7 @@ index.h <- function(x, sorted.dec=FALSE, disable.check=FALSE, algorithm=c("log-t
 #'
 #' @references Egghe L., Theory and practise of the g-index, Scientometrics 69(1), 131-152, 2006.\cr
 #'
-#' @title Egghe's \eqn{g}-index
+#' @title Egghe's g-index
 #' @param x a non-negative numeric vector.
 #' @param sorted.dec logical; \code{TRUE} if the vector has already been sorted non-increasingly; defaults \code{FALSE}.
 #' @param disable.check logical; \code{TRUE} to disable some validity checks on the input vector; defaults \code{FALSE}.
@@ -129,7 +148,7 @@ index.g <- function(x, sorted.dec=FALSE, disable.check=FALSE)
 #' Hirsch J.E., An index to quantify individual's scientific research output, Proceedings of the National Academy of Sciences 102(46), 16569-16572, 2005.\cr
 #' Woeginger G.J., An axiomatic characterization of the Hirsch-index, Mathematical Social Sciences, 56(2), 224-232, 2008.\cr
 #'
-#' @title The \eqn{r_p}-index
+#' @title The r_p-index
 #' @param x a non-negative numeric vector.
 #' @param p index order, \eqn{p \in [1,\infty]}{p in [1,\infty]}; defaults \eqn{\infty} (\code{Inf}).
 #' @param sorted.dec logical; \code{TRUE} if the vector has already been sorted non-increasingly; defaults \code{FALSE}.
@@ -194,7 +213,7 @@ index.rp <- function(x, p=Inf, sorted.dec=FALSE, disable.check=FALSE)
 #' Gagolewski M., Debski M., Nowakiewicz M., Efficient algorithms for computing ''geometric'' scientific impact indices, Research Report of Systems Research Institute, Polish Academy of Sciences RB/1/2009, 2009b.\cr
 #' Kosmulski M., MAXPROD - A new index for assessment of the scientific output of an individual, and a comparison with the h-index, Cybermetrics, 11(1), 2007.\cr
 #'
-#' @title The \eqn{l_p}-index
+#' @title The l_p-index
 #' @param x a non-negative numeric vector.
 #' @param p index order, \eqn{p \in [1,\infty]}{p in [1,\infty]}; defaults \eqn{\infty} (\code{Inf}).
 #' @param sorted.dec logical; \code{TRUE} if the vector has already been sorted non-increasingly; defaults \code{FALSE}.

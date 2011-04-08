@@ -1,3 +1,22 @@
+## This file is part of the CITAN library.
+##
+## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+##
+##
+## CITAN is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## CITAN is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+## GNU Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
+
+
 #' Performs asymptotic (approximate) \eqn{h}-test for equality of shape parameters
 #' of two samples from the Pareto type-II distributions with known
 #' and equal scale parameters, \eqn{s>0}.
@@ -14,7 +33,7 @@
 #'
 #' Note that for \eqn{k_x < k_y}, then \eqn{X} dominates \eqn{Y} stochastically.
 #'
-#' @title Two-sample asymptotic \eqn{h}-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter
+#' @title Two-sample asymptotic h-test for equality of shape parameters for Type II-Pareto distributions with known common scale parameter
 #' @param x an n-element non-negative numeric vector of data values.
 #' @param y an n-element non-negative numeric vector of data values.
 #' @param s scale parameter, \eqn{s>0}.
