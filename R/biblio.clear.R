@@ -22,34 +22,37 @@ NA
 
 
 
-#' Clears a local bibliometric storage by dropping all tables
+#' Clears a Local Bibliometric Storage by dropping all tables
 #' named \code{Biblio_*} and all views named \code{ViewBiblio_*}.
 #'
 #' For safety reasons, an SQL transaction  opened at the beginning of the
 #' removal process is not committed (closed) automatically.
 #' You should do it on your own (or rollback it), see Examples below.
 #'
-#' @title Clear a local bibliometric storage
-#' @param con a connection object as produced by \code{\link{dbBiblioConnect}}.
-#' @param verbose logical; \code{TRUE} to print out the progress of database contents' removal.
+#' @title Clear a Local Bibliometric Storage
+#' @param conn a connection object as produced by \code{\link{lbsConnect}}.
+#' @param verbose logical; \code{TRUE} to inform about the progress of database contents' removal.
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
-#' \dontrun{dbBiblioClear(con);}
-#' \dontrun{dbCommit(con);}
-#' \dontrun{dbBiblioCreate(con);}
-#' \dontrun{Scopus_ImportSources(con);}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
+#' lbsClear(conn);
+#' dbCommit(conn);
+#' lbsCreate(conn);
+#' Scopus_ImportSources(conn);
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
+#' dbDisconnect(conn);}
 #' @return \code{TRUE} on success.
-#' @seealso \code{\link{dbBiblioConnect}}, \code{\link{dbBiblioCreate}},  \code{\link{Scopus_ImportSources}}, \code{\link{dbCommit}}, \code{\link{dbRollback}}, \code{\link{dbBiblioDeleteAuthorsDocuments}}
+#' @seealso \code{\link{lbsConnect}}, \code{\link{lbsCreate}},
+#' \code{\link{Scopus_ImportSources}}, \code{\link{lbsDeleteAllAuthorsDocuments}}
+#' \code{\link{dbCommit}}, \code{\link{dbRollback}}
 #' @export
-dbBiblioClear <- function(con, verbose=TRUE)
+lbsClear <- function(conn, verbose=TRUE)
 {
-	CITAN:::.dbBiblioCheckConnection(con); # will stop on invalid/dead connection
+	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 
-	dbBeginTransaction(con);
+	dbBeginTransaction(conn);
 
-	objects <- dbListTables(con);
+	objects <- dbListTables(conn);
 	tables <- objects[substr(objects,1,7) == "Biblio_"];
 	views  <- objects[substr(objects,1,11) == "ViewBiblio_"];
 
@@ -66,7 +69,7 @@ dbBiblioClear <- function(con, verbose=TRUE)
 		for (i in 1:length(tables))
 		{
 			if (verbose) cat(sprintf("Dropping table '%s'... ", tables[i]));
-			dbExecQuery(con, sprintf("DROP TABLE %s;", tables[i]), TRUE);
+			dbExecQuery(conn, sprintf("DROP TABLE %s;", tables[i]), TRUE);
 			if (verbose) cat("DONE.\n");
 		}
 
@@ -75,7 +78,7 @@ dbBiblioClear <- function(con, verbose=TRUE)
 		for (i in 1:length(views))
 		{
 			if (verbose) cat(sprintf("Dropping view '%s'... ", views[i]));
-			dbExecQuery(con, sprintf("DROP VIEW %s;", views[i]), TRUE);
+			dbExecQuery(conn, sprintf("DROP VIEW %s;", views[i]), TRUE);
 			if (verbose) cat("DONE.\n");
 		}
 
@@ -89,40 +92,41 @@ dbBiblioClear <- function(con, verbose=TRUE)
 
 
 
-#' Deletes are author, document and survey information from a local bibliometric
-#' storage.
+#' Deletes are author, document and survey information from a Local Bibliometric
+#' Storage.
 #'
 #' For safety reasons, an SQL transaction opened at the beginning of the
 #' removal process is not committed (closed) automatically.
 #' You should do it on your own (or rollback it), see Examples below.
 #'
-#' @title Delete all authors, documents and surveys from a local bibliometric storage
-#' @param con a connection object as produced by \code{\link{dbBiblioConnect}}.
+#' @title Delete all authors, documents and surveys from a Local Bibliometric Storage
+#' @param conn a connection object as produced by \code{\link{lbsConnect}}.
 #' @param verbose logical; \code{TRUE} to print out the progress of database contents' removal.
 #' @return \code{TRUE} on success.
-#' @seealso \code{\link{dbBiblioClear}}, \code{\link{dbCommit}}, \code{\link{dbRollback}}
+#' @seealso \code{\link{lbsClear}}, \code{\link{dbCommit}}, \code{\link{dbRollback}}
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
-#' \dontrun{dbBiblioDeleteAuthorsDocuments(con);}
-#' \dontrun{dbCommit(con);}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
+#' lbsDeleteAllAuthorsDocuments(conn);
+#' dbCommit(conn);
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
+#' dbDisconnect(conn);}
 #' @export
-dbBiblioDeleteAuthorsDocuments <- function(con, verbose=TRUE)
+lbsDeleteAllAuthorsDocuments <- function(conn, verbose=TRUE)
 {
-	CITAN:::.dbBiblioCheckConnection(con); # will stop on invalid/dead connection
+	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 	
 
 	if (verbose) cat(sprintf("Deleting all author and document information... "));
 
 
-	dbBeginTransaction(con);
+	dbBeginTransaction(conn);
 	
-	dbExecQuery(con, "DELETE FROM Biblio_DocumentsSurveys", TRUE);
-	dbExecQuery(con, "DELETE FROM Biblio_AuthorsDocuments", TRUE);
-	dbExecQuery(con, "DELETE FROM Biblio_Surveys", TRUE);
-	dbExecQuery(con, "DELETE FROM Biblio_Authors", TRUE);
-	dbExecQuery(con, "DELETE FROM Biblio_Documents", TRUE);
+	dbExecQuery(conn, "DELETE FROM Biblio_DocumentsSurveys", TRUE);
+	dbExecQuery(conn, "DELETE FROM Biblio_AuthorsDocuments", TRUE);
+	dbExecQuery(conn, "DELETE FROM Biblio_Surveys", TRUE);
+	dbExecQuery(conn, "DELETE FROM Biblio_Authors", TRUE);
+	dbExecQuery(conn, "DELETE FROM Biblio_Documents", TRUE);
 
 	if (verbose) cat(sprintf("DONE.\n"));
 

@@ -21,7 +21,7 @@ NA
 
 
 #' /internal/
-.dbBiblioImportDocuments_GetSurvey <- function(con, surveyDescription, originalFilename, verbose)
+.lbsImportDocuments_GetSurvey <- function(conn, surveyDescription, originalFilename, verbose)
 {
 	query <- sprintf("INSERT INTO Biblio_Surveys('Description', 'FileName', 'Timestamp')
 		VALUES(%s, %s, %s)",
@@ -29,14 +29,14 @@ NA
 		sqlStringOrNULL(originalFilename),
 		sqlStringOrNULL(format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
 	);
-	dbExecQuery(con, query, TRUE);
+	dbExecQuery(conn, query, TRUE);
 
-	return(as.numeric(dbGetQuery(con, "SELECT last_insert_rowid()")[1,1]));
+	return(as.numeric(dbGetQuery(conn, "SELECT last_insert_rowid()")[1,1]));
 }
 
 
 #' /internal/
-.dbBiblioImportDocuments_GetIdLanguage <- function(con, data, verbose)
+.lbsImportDocuments_GetIdLanguage <- function(conn, data, verbose)
 {
 	IdLanguage <- data$Language;
 	levels(IdLanguage) <- sqlTrim(levels(IdLanguage));
@@ -49,11 +49,11 @@ NA
 			next;
 
 		query <- sprintf("INSERT OR IGNORE INTO Biblio_Languages('Name')
-			VALUES('%s')", sqlEscape(levels(IdLanguage)[i]));
-		dbExecQuery(con, query, TRUE);
+			VALUES(UPPER('%s'))", sqlEscape(levels(IdLanguage)[i]));
+		dbExecQuery(conn, query, TRUE);
 
-		levels(IdLanguage)[i] <- dbGetQuery(con,
-			sprintf("SELECT IdLanguage FROM Biblio_Languages WHERE Name='%s';",
+		levels(IdLanguage)[i] <- dbGetQuery(conn,
+			sprintf("SELECT IdLanguage FROM Biblio_Languages WHERE Name=UPPER('%s');",
 			sqlEscape(levels(IdLanguage)[i])))[1,1];
 		stopifnot(!is.na(levels(IdLanguage)[i]));
 	}
@@ -66,12 +66,12 @@ NA
 
 
 #' /internal/
-.dbBiblioImportDocuments_Add_Get_idSource <- function(con, issn, warnISSN, i)
+.lbsImportDocuments_Add_Get_idSource <- function(conn, issn, warnISSN, i)
 {
 	if (!is.na(issn))
 	{
-		idSource <- dbGetQuery(con, sprintf("SELECT idSource FROM Biblio_Sources
-			WHERE ISSN_Print=%s OR ISSN_E=%s",
+		idSource <- dbGetQuery(conn, sprintf("SELECT idSource FROM Biblio_Sources
+			WHERE UPPER(ISSN_Print)=UPPER(%s) OR UPPER(ISSN_E)=UPPER(%s)",
 			sqlStringOrNULL(issn),
 			sqlStringOrNULL(issn)
 		));
@@ -96,7 +96,7 @@ NA
 
 
 #' /internal/
-.dbBiblioImportDocuments_Add_Get_BibEntry <- function(con, data_i)
+.lbsImportDocuments_Add_Get_BibEntry <- function(conn, data_i)
 {
 	paste(c(
 		sqlTrim(data_i$SourceTitle[1]), 
@@ -110,9 +110,8 @@ NA
 
 
 #' /internal/
-.dbBiblioImportDocuments_Add <- function(con, data, excludeRows, idSurvey,
-	IdLanguage, i, updateDocumentIfExists, warnISSN, warnExactDuplicates,
-	warnDuplicateTitles, verbose)
+.lbsImportDocuments_Add <- function(conn, data, excludeRows, idSurvey,
+	IdLanguage, i, updateDocumentIfExists, warnISSN, warnExactDuplicates, verbose)
 {
 	if (any(excludeRows==i)) return(FALSE);
 
@@ -124,13 +123,13 @@ NA
 		issn <- NA;
 	}
 
-	idSource <- .dbBiblioImportDocuments_Add_Get_idSource(con, issn, warnISSN, i);
-	BibEntry <- .dbBiblioImportDocuments_Add_Get_BibEntry(con, data[i,]);
+	idSource <- .lbsImportDocuments_Add_Get_idSource(conn, issn, warnISSN, i);
+	BibEntry <- .lbsImportDocuments_Add_Get_BibEntry(conn, data[i,]);
 
 
 
-	res <- dbGetQuery(con, sprintf("SELECT IdDocument, IdSource, Title, BibEntry, Citations, Type
-		FROM Biblio_Documents WHERE UniqueId='%s';", sqlEscapeTrim(data$UniqueId[i])));
+	res <- dbGetQuery(conn, sprintf("SELECT IdDocument, IdSource, Title, BibEntry, Citations, Type
+		FROM Biblio_Documents WHERE UPPER(UniqueId)=UPPER('%s');", sqlEscapeTrim(data$UniqueId[i])));
 
 	if (nrow(res) != 0)
 	{
@@ -150,7 +149,7 @@ NA
 		{
 		
 			 # will add authors once again later (they may be different)
-			dbExecQuery(con, sprintf("DELETE FROM Biblio_AuthorsDocuments WHERE IdDocument=%g;", idDocument), TRUE);
+			dbExecQuery(conn, sprintf("DELETE FROM Biblio_AuthorsDocuments WHERE IdDocument=%g;", idDocument), TRUE);
 			
 			
 			# Update document
@@ -176,27 +175,15 @@ NA
 				sqlNumericOrNULL(data$PageEnd[i]-data$PageStart[i]+1),
 				ifelse(is.finite(data$Citations[i]), data$Citations[i], 0),
 				sqlSwitchOrNULL(data$DocumentType[i],
-					CITAN:::.dbBiblio_DocumentTypesFull,
-					CITAN:::.dbBiblio_DocumentTypesShort
+					CITAN:::.lbs_DocumentTypesFull,
+					CITAN:::.lbs_DocumentTypesShort
 				),
 				sqlNumericOrNULL(idDocument)
 			);
-			dbExecQuery(con, query, TRUE);
+			dbExecQuery(conn, query, TRUE);
 		}
 	} else {
 		documentExists <- FALSE;
-		
-		
-		# If a title is not unique, warn on demand (That may indicate non-unique-UniqueId)
-		if (warnDuplicateTitles)
-		{
-			res <- dbGetQuery(con, sprintf("SELECT IdDocument
-			FROM Biblio_Documents WHERE Title='%s';", sqlEscapeTrim(data$Title[i])));
-			
-			if (nrow(res)!=0)
-				warning(sprintf("a document with the same title '%s' already exists (row=%g) but has different 'UniqueId'.",
-					sqlTrim(data$Title[i]), i));
-		}
 		
 		
 		# Insert document
@@ -212,21 +199,21 @@ NA
 			sqlNumericOrNULL(data$PageEnd[i]-data$PageStart[i]+1),
 			ifelse(is.finite(data$Citations[i]), data$Citations[i], 0),
 			sqlSwitchOrNULL(data$DocumentType[i],
-				CITAN:::.dbBiblio_DocumentTypesFull,
-				CITAN:::.dbBiblio_DocumentTypesShort
+				CITAN:::.lbs_DocumentTypesFull,
+				CITAN:::.lbs_DocumentTypesShort
 			)
 		);
-		dbExecQuery(con, query, TRUE);
+		dbExecQuery(conn, query, TRUE);
 		
 		
-		idDocument <- dbGetQuery(con, "SELECT last_insert_rowid()")[1,1];
+		idDocument <- dbGetQuery(conn, "SELECT last_insert_rowid()")[1,1];
 	}
 	
 	
 	
 	query <- sprintf("INSERT INTO Biblio_DocumentsSurveys (IdDocument, IdSurvey) VALUES(%s, %s);",
 		sqlNumericOrNULL(idDocument), sqlNumericOrNULL(idSurvey));
-	dbExecQuery(con, query, TRUE);
+	dbExecQuery(conn, query, TRUE);
 
 
 	if (documentExists && !updateDocumentIfExists) return(FALSE);
@@ -241,13 +228,13 @@ NA
 		
 		
 		# Get idAuthor (and add him/her eventually)
-		idAuthor <- dbGetQuery(con, sprintf("SELECT IdAuthor FROM Biblio_Authors WHERE Name=%s",
+		idAuthor <- dbGetQuery(conn, sprintf("SELECT IdAuthor FROM Biblio_Authors WHERE UPPER(Name)=UPPER(%s)",
 			sqlStringOrNULL(authors[j])
 		));
 		if (nrow(idAuthor) == 0)
 		{
-			dbExecQuery(con, sprintf("INSERT INTO Biblio_Authors(Name) VALUES(%s);", sqlStringOrNULL(authors[j])), TRUE);
-			idAuthor <- dbGetQuery(con, "SELECT last_insert_rowid()")[1,1];
+			dbExecQuery(conn, sprintf("INSERT INTO Biblio_Authors(Name) VALUES(%s);", sqlStringOrNULL(authors[j])), TRUE);
+			idAuthor <- dbGetQuery(conn, "SELECT last_insert_rowid()")[1,1];
 		} else {
 			idAuthor <- idAuthor[1,1];
 		}
@@ -257,7 +244,7 @@ NA
 			VALUES(%s, %s);",
 			sqlNumericOrNULL(idAuthor),
 			sqlNumericOrNULL(idDocument));
-		dbExecQuery(con, query, TRUE);
+		dbExecQuery(conn, query, TRUE);
 	}
 	
 	return(!documentExists)
@@ -265,31 +252,33 @@ NA
 
 
 
-#' Imports publications from a special 14-column data frame to a local bibliometric storage.
+#' Imports publications from a special 14-column data frame to a Local Bibliometric Storage.
 #' Such an input may be created e.g. with \code{\link{Scopus_ReadCSV}}.
 #'
 #'
 #' \code{data} must consist of the following 14 columns (in order). Otherwise
 #' the process will not be executed.
 #' \tabular{llll}{
-#' 1  \tab \code{Authors}       \tab \code{character}\tab  Author(s) name(s), comma-separated, surnames first.\cr
-#' 2  \tab \code{Title}         \tab \code{character}\tab  Document title.\cr
-#' 3  \tab \code{Year}          \tab \code{numeric}  \tab  Year of publication.\cr
-#' 4  \tab \code{SourceTitle}   \tab \code{character}\tab  Title of the source containing the document.\cr
-#' 5  \tab \code{Volume}        \tab \code{character}\tab  Volume.\cr
-#' 6  \tab \code{Issue}         \tab \code{character}\tab  Issue.\cr
-#' 7  \tab \code{ArticleNumber} \tab \code{character}\tab  Article number (identifier).\cr
-#' 8  \tab \code{PageStart}     \tab \code{numeric}  \tab  Start page; numeric.\cr
-#' 9  \tab \code{PageEnd}       \tab \code{numeric}  \tab  End page; numeric.\cr
-#' 10 \tab \code{Citations}     \tab \code{numeric}  \tab  Number of citations.\cr
-#' 11 \tab \code{UniqueId}      \tab \code{character}\tab  Unique document identifier. Documents with \code{is.na(UniqueId)} will not be added.\cr
-#' 12 \tab \code{ISSN}          \tab \code{character}\tab  ISSN of the source.\cr
-#' 13 \tab \code{Language}      \tab \code{factor}   \tab  Language of the document.\cr
-#' 14 \tab \code{DocumentType}  \tab \code{factor}   \tab  Type of the document; \dQuote{Article}, \dQuote{Article in Press},
+#' 1  \tab \code{Authors}       \tab character\tab  Author(s) name(s), comma-separated, surnames first.\cr
+#' 2  \tab \code{Title}         \tab character\tab  Document title.\cr
+#' 3  \tab \code{Year}          \tab numeric  \tab  Year of publication.\cr
+#' 4  \tab \code{SourceTitle}   \tab character\tab  Title of the source containing the document.\cr
+#' 5  \tab \code{Volume}        \tab character\tab  Volume.\cr
+#' 6  \tab \code{Issue}         \tab character\tab  Issue.\cr
+#' 7  \tab \code{ArticleNumber} \tab character\tab  Article number (identifier).\cr
+#' 8  \tab \code{PageStart}     \tab numeric  \tab  Start page; numeric.\cr
+#' 9  \tab \code{PageEnd}       \tab numeric  \tab  End page; numeric.\cr
+#' 10 \tab \code{Citations}     \tab numeric  \tab  Number of citations.\cr
+#' 11 \tab \code{UniqueId}      \tab character\tab  Unique document identifier. \cr
+#' 12 \tab \code{ISSN}          \tab character\tab  ISSN of the source.\cr
+#' 13 \tab \code{Language}      \tab factor   \tab  Language of the document.\cr
+#' 14 \tab \code{DocumentType}  \tab factor   \tab  Type of the document.\cr
+#' }
+#'
+#' \code{DocumentType} is one of \dQuote{Article}, \dQuote{Article in Press},
 #'        \dQuote{Book}, \dQuote{Conference Paper}, \dQuote{Editorial}, \dQuote{Erratum},
 #'        \dQuote{Letter}, \dQuote{Note}, \dQuote{Report},
-#'        \dQuote{Review}, \dQuote{Short Survey}, or \code{NA} (other categories are interpreted as \code{NA}).\cr
-#' }
+#'        \dQuote{Review}, \dQuote{Short Survey}, or \code{NA} (other categories are interpreted as \code{NA}).
 #'
 #' Note that if \code{data} contains many records (>1000),
 #' the import process may take a few minutes.
@@ -300,38 +289,37 @@ NA
 #'
 #' Each time a function is called, a new record in the table \code{Biblio_Surveys}
 #' is created. Such surveys may be grouped using the \code{Description}
-#' field, see \code{\link{dbBiblioCreate}}.
+#' field, see \code{\link{lbsCreate}}.
 #'
-#' @title Import publications to a local bibliometric storage.
-#' @param con a connection object as produced by \code{\link{dbBiblioConnect}}.
+#' @title Import publications to a Local Bibliometric Storage.
+#' @param conn a connection object as produced by \code{\link{lbsConnect}}.
 #' @param data 14 column \code{data.frame} with bibliometric entries; see above.
-#' @param surveyDescription Description of the survey. Allows for documents grouping.
-#' @param originalFilename Original file name, \code{attr(data, "filename")} is used by default.
-#' @param excludeRows a numeric vector with row numbers of \code{data} to exclude or \code{NULL}
+#' @param surveyDescription description of the survey. Allows for documents grouping.
+#' @param originalFilename original file name, \code{attr(data, "filename")} is used by default.
+#' @param excludeRows a numeric vector with row numbers of \code{data} to exclude or \code{NULL}.
 #' @param updateDocumentIfExists logical; if \code{TRUE}, then documents with the same \code{UniqueId} will be updated.
 #' @param doVacuum logical; if \code{TRUE} then the SQL command \code{VACUUM}
-#'        will be executed on the database after importing data to optimize and compact the bibliometric storage.
+#'        will be executed on the database after importing data to optimize and compact the Local Bibliometric Storage.
 #' @param warnISSN logical; if \code{TRUE} then warnings are generated if a given ISSN in not found in the table \code{Biblio_Sources}.
 #' @param warnExactDuplicates logical; \code{TRUE} to warn if exact duplicates are found (turned off by default).
-#' @param warnDuplicateTitles logical; \code{TRUE} to warn if documents
-#'        of the same \code{Title} but different \code{UniqueId}s are found.
-#'        This may indicate possible data misrepresentations.
-#' @param verbose logical; \code{TRUE} to print out the progress of lengthy computations. 
+#' @param verbose logical; \code{TRUE} to inform about the progress of the process.
 #' @return  \code{TRUE} on success.
-#' @seealso \code{\link{Scopus_ReadCSV}}, \code{\link{dbBiblioConnect}}, \code{\link{dbBiblioCreate}}
+#' @seealso \code{\link{Scopus_ReadCSV}}, \code{\link{lbsConnect}}, \code{\link{lbsCreate}}
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
 #' ## ...
-#' \dontrun{data <- Scopus_ReadCSV("db_Polish_MATH/Poland_MATH_1987-1993.csv");}
-#' \dontrun{dbBiblioImportDocuments(con, data, "Poland_MATH");}
+#' data <- Scopus_ReadCSV("db_Polish_MATH/Poland_MATH_1987-1993.csv");
+#' lbsImportDocuments(conn, data, "Poland_MATH");
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
+#' dbDisconnect(conn);}
 #' @export
-dbBiblioImportDocuments <- function(con, data, surveyDescription="Default survey",
-   originalFilename=attr(data, "filename"), excludeRows=NULL,  updateDocumentIfExists=TRUE, doVacuum=TRUE,
-   warnISSN=FALSE, warnExactDuplicates=FALSE, warnDuplicateTitles=TRUE, verbose=TRUE)
+lbsImportDocuments <- function(conn, data, surveyDescription="Default survey",
+   originalFilename=attr(data, "filename"),
+   excludeRows=NULL,  updateDocumentIfExists=TRUE, doVacuum=TRUE,
+   warnISSN=FALSE, warnExactDuplicates=FALSE, verbose=TRUE)
 {
-	CITAN:::.dbBiblioCheckConnection(con); # will stop on invalid/dead connection
+	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 
 
 
@@ -369,30 +357,37 @@ dbBiblioImportDocuments <- function(con, data, surveyDescription="Default survey
 
 	# -------------------------------------------------------------------
 
-	dbBeginTransaction(con);
+	dbBeginTransaction(conn);
 
-	idSurvey <- .dbBiblioImportDocuments_GetSurvey(con, surveyDescription, originalFilename, verbose);
+	idSurvey <- .lbsImportDocuments_GetSurvey(conn, surveyDescription, originalFilename, verbose);
 	stopifnot(length(idSurvey) == 1 && is.finite(idSurvey));
 
-	IdLanguage <- .dbBiblioImportDocuments_GetIdLanguage(con, data, verbose);
+	IdLanguage <- .lbsImportDocuments_GetIdLanguage(conn, data, verbose);
 	stopifnot(length(IdLanguage) == nrow(data));
 	
-	if (verbose) cat(sprintf("Importing documents and their authors... "));
 
 
 	i <- 1L;
 	k <- 0L;
 	n <- as.integer(nrow(data));
+	
+	if (verbose)
+	{
+		cat(sprintf("Importing documents and their authors... "));
+		window <- CITAN:::.gtk2.progressBar(0, n,
+			info=sprintf("Importing %g documents and their authors to %s/%s...",
+			n, surveyDescription, originalFilename));
+	}
+	
 	while (i <= n)
 	{
-		if (.dbBiblioImportDocuments_Add(con, data, excludeRows, idSurvey, IdLanguage, i,
-			updateDocumentIfExists, warnISSN, warnExactDuplicates, warnDuplicateTitles, verbose))
+		if (.lbsImportDocuments_Add(conn, data, excludeRows, idSurvey, IdLanguage, i,
+			updateDocumentIfExists, warnISSN, warnExactDuplicates, verbose))
 		{
 			k <- k+1L;
 		}
 		
-		if (verbose && (i %% 50L == 0))
-			cat(sprintf(" %4.1f%%\b\b\b\b\b\b", i*100.0/n));
+		if (verbose) CITAN:::.gtk2.progressBar(i,n,window=window);
 		i <- i+1L;
 	}
 
@@ -402,13 +397,13 @@ dbBiblioImportDocuments <- function(con, data, surveyDescription="Default survey
 
 	# -------------------------------------------------------------------
 
-	dbCommit(con);
+	dbCommit(conn);
 
 	# -------------------------------------------------------------------
 
 
 	if (doVacuum)
-		dbExecQuery(con, "VACUUM", FALSE);
+		dbExecQuery(conn, "VACUUM", FALSE);
 
 	return(TRUE);
 }

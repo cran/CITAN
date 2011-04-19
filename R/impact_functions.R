@@ -40,9 +40,11 @@
 #' @param algorithm type of algorithm, "linear-time" or "log-time" (default).
 #' @return The function returns a single number or NA if improper input has been given.
 #' @seealso
-#' \code{\link{index.g}}, \code{\link{index.rp}}, \code{\link{index.lp}}, \code{\link{Sstat}}, \code{\link{Sstat2}},
-#' \code{\link{phirsch}}, \code{\link{dhirsch}}, \code{\link{pareto2.confint.h}}, \code{\link{pareto2.htest}},
-#' \code{\link{pareto2.htest.approx}}
+#' \code{\link{pareto2.confint.h}}, \code{\link{pareto2.htest}},
+#' \code{\link{pareto2.htest.approx}},\cr
+#' \code{\link{phirsch}}, \code{\link{dhirsch}}, 
+#' \code{\link{index.g}}, \code{\link{index.rp}}, \code{\link{index.lp}},
+#' \code{\link{Sstat}}, \code{\link{Sstat2}}
 #'
 #' @examples
 #' authors <- list(  # a list of numeric sequences

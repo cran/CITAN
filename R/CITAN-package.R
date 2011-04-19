@@ -19,7 +19,7 @@
 
 #' \pkg{CITAN} is a library of functions useful in --- but not limited to ---
 #' quantitative research in the field of scientometrics.
-#' It contains various methods for pre-processing 
+#' It contains various tools for preprocessing 
 #' bibliometric data retrieved e.g. from Elsevier's \emph{SciVerse Scopus} and
 #' calculating impact of individuals.
 #' Also, many functions dealing with Pareto-Type II (GPD)
@@ -111,34 +111,41 @@
 #' }
 #'
 #' \strong{(2)}
-#' To \bold{pre-process and analyze bibliometric data} retrieved
+#' To \bold{preprocess and analyze bibliometric data} retrieved
 #' e.g. from Elsevier's \emph{SciVerse Scopus}
-#' we need the free SQLite DataBase Management System, see \url{http://www.sqlite.org/}
-#' and the \pkg{RSQLite} package.
-#' \pkg{CITAN} is able to import publication data from Scopus CSV files
-#' (saved with settings "Output: complete format", see \code{\link{Scopus_ReadCSV}}).
-#' Note that the output limit in Scopus is 2000 records per file, so to perform
-#' bibliometric research we often need to divide the query results into many parts.
-#' \pkg{CITAN} is able to merge them back even if records are repeating.
-#'
-#' Data frames \code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}}
-#' contain various information on current source coverage of Scopus.
-#' They are needed during the creation of our local bibliometric storage,
-#' see \code{\link{Scopus_ImportSources}} and \code{\link{dbBiblioCreate}}
+#' we need the \pkg{RSQLite} package. It is an interface to the free
+#' SQLite DataBase Management System (see \url{http://www.sqlite.org/}).
+#' All data is stored in a so-called Local Bibliometric Storage (\acronym{LBS}),
+#' created with the \code{\link{lbsCreate}} function.
+#' 
+#' The data frames \code{\link{Scopus_ASJC}} and \code{\link{Scopus_SourceList}}
+#' contain various information on current source coverage of SciVerse Scopus.
+#' They may be needed during the creation of the LBS and \code{\link{lbsCreate}}
 #' for more details.
 #' \emph{License information: this data are publicly available
 #'       and hence no special permission is needed to redistribute them
 #'       (information from Elsevier).}
 #'
+#' \pkg{CITAN} is able to import publication data from Scopus CSV files
+#' (saved with settings "Output: complete format", see \code{\link{Scopus_ReadCSV}}).
+#' Note that the output limit in Scopus is 2000 entries per file.
+#' Therefore, to perform
+#' bibliometric research we often need to divide the query results into many parts.
+#' \pkg{CITAN} is able to merge them back even if records are repeating.
+#'
 #' The data may be accessed via functions from the \pkg{DBI} interface.
 #' However, some typical tasks may be automated using
-#' e.g. \code{\link{dbBiblioDescriptiveStats}} (basic description of the whole sample
+#' e.g. \code{\link{lbsDescriptiveStats}} (basic description of the whole sample
 #' or its subsets, called \sQuote{Surveys}),
-#' \code{\link{dbBiblioGetCitations}} (gather citation sequences selected authors), and
-#' \code{\link{dbBiblioAssess}} (mass-compute impact function values for given
+#' \code{\link{lbsGetCitations}} (gather citation sequences selected authors), and
+#' \code{\link{lbsAssess}} (mass-compute impact functions' values for given
 #' citation sequences).
-#' \cr\cr
 #'
+#' There are also some helpful functions (in **EXPERIMENTAL** stage) which use
+#' the \pkg{RGtk2} library (see Lawrence, Lang, 2010)
+#' to display some suggestions on which documents or authors should be
+#' merged, see \code{\link{lbsFindDuplicateTitles}} and
+#' \code{\link{lbsFindDuplicateAuthors}}.
 #'
 #' \strong{(3)}
 #' Additionally, a set of \bold{functions dealing with stochastic aspects
@@ -201,6 +208,8 @@
 #' @title CITation ANalysis toolpack
 #' @author Marek Gagolewski \email{gagolews@@ibspan.waw.pl}
 #' @references
+#' GTK+ Project, \url{http://www.gtk.org/download.html}\cr
+#' SQLite DBMS, \url{http://www.sqlite.org/}\cr
 #' Dubois D., Prade H., Testemale C., Weighted fuzzy pattern matching, Fuzzy Sets and Systems 28, s. 313-331, 1988.\cr
 #' Egghe L., Theory and practise of the g-index, Scientometrics 69(1), 131-152, 2006.\cr
 #' Gagolewski M., Grzegorzewski P., Possibilistic analysis of arity-monotonic aggregation operators and its relation to bibliometric impact assessment of individuals, International Journal of Approximate Reasoning, 2011, doi:10.1016/j.ijar.2011.01.010.\cr
@@ -211,6 +220,7 @@
 #' Grabisch M., Pap E., Marichal J.-L., Mesiar R.. Aggregation functions, Cambridge, 2009.\cr
 #' Hirsch J.E., An index to quantify individual's scientific research output, Proceedings of the National Academy of Sciences 102(46), 16569-16572, 2005.\cr
 #' Kosmulski M., MAXPROD - A new index for assessment of the scientific output of an individual, and a comparison with the h-index, Cybermetrics 11(1), 2007.\cr
+#' Lawrence M., Lang D.T., RGtk2: A graphical user interface toolkit for R, Journal of Statistical Software 37(8), 1-52, 2010.\cr
 #' Woeginger G.J., An axiomatic characterization of the Hirsch-index, Mathematical Social Sciences 56(2), 224-232, 2008.\cr
 #' Zhang J., Stevens M.A., A New and Efficient Estimation Method for the Generalized Pareto Distribution, Technometrics 51(3), 2009, 316-325.\cr
 NA

@@ -131,9 +131,10 @@ void index_rp_finite(double* x, int* n, double *p, double* out)
  */
 void index_rp_infinite(double* x, int* n, double* out)
 {
-	int h =__index_h_log(x, *n);
+	int N = *n;
+	int h =__index_h_log(x, N);
 
-	if (h < (*n))
+	if (h < N)
 	{
 		if ((double)h < x[h])
 			*out = x[h];
@@ -209,7 +210,7 @@ void index_lp_finite(double* x, int* n, double *p, int* s, double* out)
 	double N = *n;
 	int m = 0; /* stack s is empty */
 	int i = 1;
-	int k, j;
+	int j; /*, k */
 	double a2p, b2p;
 
 #define LP_EPS 1e-9
@@ -234,7 +235,7 @@ void index_lp_finite(double* x, int* n, double *p, int* s, double* out)
 	}
 
 	/*  now, selectMaxPair()  */
-	k = 0;
+/*  	k = 0; */
 	__index_lp_finite_getAB(P, (double)s[0],x[s[0]], (double)s[1],((s[1]<N)?x[s[1]]:0.0), &a2p, &b2p);
 	for (j=1; j<m-1; ++j)
 	{
@@ -250,7 +251,7 @@ void index_lp_finite(double* x, int* n, double *p, int* s, double* out)
 		{
 			a2p = a22p;
 			b2p = b22p;
-			k = j;
+/*			k = j; */
 		}
 	}
 

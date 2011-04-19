@@ -21,7 +21,7 @@ NA
 
 
 
-#' Connects to a local bibliometric storage handled by SQLite engine
+#' Connects to a Local Bibliometric Storage handled by the SQLite engine
 #' (see \pkg{RSQLite} package documentation).
 #'
 #' Do not forget to close the connection (represented by the object returned)
@@ -30,17 +30,18 @@ NA
 #' functions from the \pkg{DBI} package called on the
 #' returned connection object.
 #'
-#' @title Connect to a local bibliometric storage driven by SQLite
+#' @title Connect to a Local Bibliometric Storage
 #' @param dbfilename name of the file storing the SQLite database.
 #' @return An object of type \code{SQLiteConnection}.
 #' It is used to direct commands to the SQLite engine.
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
-#' @seealso \code{\link{dbBiblioCreate}}, \code{\link{dbDisconnect}}
+#' dbDisconnect(conn);}
+#' @seealso \code{\link{lbsCreate}}, \code{\link{dbDisconnect}}
 #' @export
-dbBiblioConnect <- function(dbfilename)
+lbsConnect <- function(dbfilename)
 {
 	if (length(dbfilename)!=1 || !is.character(dbfilename))
 		stop("incorrect 'dbfilename' given");

@@ -35,7 +35,9 @@
 #' @param tol the desired accuracy (convergence tolerance).
 #' @return Upper bound of the confidence interval.
 #' @export
-#' @seealso \code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}}, \code{\link{pareto2.confint.rho}}, \code{\link{pareto2.confint.h}}, \code{\link{pareto2.confint.h.lower}}
+#' @seealso \code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}},
+#' \code{\link{pareto2.confint.rho}},\cr
+#' \code{\link{pareto2.confint.h}}, \code{\link{pareto2.confint.h.lower}}
 pareto2.confint.h.upper <- function(h, s, n, conf.level=0.95, tol=1e-12)
 {
 	gamma <- 1-conf.level;
@@ -78,7 +80,9 @@ pareto2.confint.h.upper <- function(h, s, n, conf.level=0.95, tol=1e-12)
 #' @param tol the desired accuracy (convergence tolerance).
 #' @return Lower bound of the confidence interval.
 #' @export
-#' @seealso \code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}}, \code{\link{pareto2.confint.rho}}, \code{\link{pareto2.confint.h}}, \code{\link{pareto2.confint.h.lower}}
+#' @seealso \code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}},
+#' \code{\link{pareto2.confint.rho}},\cr
+#' \code{\link{pareto2.confint.h}}, \code{\link{pareto2.confint.h.lower}}
 pareto2.confint.h.lower <- function(h, s, n, conf.level=0.95, tol=1e-12)
 {
 	gamma <- 1-conf.level;
@@ -123,7 +127,9 @@ pareto2.confint.h.lower <- function(h, s, n, conf.level=0.95, tol=1e-12)
 #' @param tol the desired accuracy (convergence tolerance).
 #' @return Vector of length 2 with the computed bounds of the confidence interval.
 #' @export
-#' @seealso \code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}}, \code{\link{pareto2.confint.rho}}, \code{\link{pareto2.confint.h.upper}}, \code{\link{pareto2.confint.h.upper}}
+#' @seealso \code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}},
+#' \code{\link{pareto2.confint.rho}},\cr
+#' \code{\link{pareto2.confint.h.upper}}, \code{\link{pareto2.confint.h.upper}}
 pareto2.confint.h <- function(h, s, n, conf.level=0.95, tol=1e-12)
 {
 	gamma <- 1-conf.level;

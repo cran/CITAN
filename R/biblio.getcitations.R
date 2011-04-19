@@ -23,36 +23,40 @@ NA
 
 
 
-#' Creates citation sequences for authors in a local bibliometric storage,
-#' that is vectors of citation counts of all the documents mapped to
-#' selected  authors.
-#' The results may be restricted to a given Survey (using \code{SurveyDescription}
-#' parameter) or document types (\code{DocumentTypes}).
+#' Creates ordered citation sequences of authors in a Local Bibliometric Storage.
 #'
-#' @title Fetch citation sequences for authors in a local bibliometric storage
-#' @param con a connection object as produced by \code{\link{dbBiblioConnect}}.
-#' @param DocumentTypes character vector or \code{NULL}; specifies document types to restrict to;
+#' A citation sequence is a numeric vector
+#' consisting of citation counts of all the documents mapped to
+#' selected  authors.
+#' However, the function may take into account only the documents
+#' from a given Survey (using \code{surveyDescription}
+#' parameter) or of chosen types (\code{documentTypes}).
+#'
+#' @title Fetch authors' citation sequences
+#' @param conn a connection object as produced by \code{\link{lbsConnect}}.
+#' @param documentTypes character vector or \code{NULL}; specifies document types to restrict to;
 #'    a combination of \code{Article}, \code{Article in Press}, \code{Book}, \code{Conference Paper},
 #'    \code{Editorial}, \code{Erratum}, \code{Letter}, \code{Note}, \code{Report}, \code{Review},
 #'    \code{Short Survey}. \code{NULL} means no restriction.
-#' @param SurveyDescription single character string or \code{NULL}; survey to restrict to or \code{NULL} for no restriction.
-#' @param IdAuthors numeric vector od author identifiers to restrict to (in the table \code{Biblio_Authors}) or \code{NULL} for no restriction.
-#' @param verbose logical; \code{TRUE} to print out the progress of lengthy computations.
-#' @return A list of numeric vectors is returned. Each element of the list corresponds
-#' to a citation sequence of a different author. List \code{names} attribute are
+#' @param surveyDescription single character string or \code{NULL}; survey to restrict to or \code{NULL} for no restriction.
+#' @param idAuthors numeric vector of authors' identifiers for which the sequences are to be created or \code{NULL} for all authors in the database.
+#' @param verbose logical; \code{TRUE} to inform about the progress of the process.
+#' @return A list of non-increasingly ordered numeric vectors is returned. Each element of the list corresponds
+#' to a citation sequence of some author. List \code{names} attribute are
 #' set to authors' names. Moreover, each vector has a set \code{IdAuthor}
-#' attribute, which uniquely identifies a corresponding record in the table \code{Biblio_Authors}.
+#' attribute, which uniquely identifies the corresponding record in the table \code{Biblio_Authors}.
 #' Citation counts come together with \code{IdDocument}s (vector elements are named).
 #'
 #' The list of citation sequences may then be used to calculate
-#' authors' impact using \code{\link{dbBiblioAssess}} (see Examples below).
+#' authors' impact using \code{\link{lbsAssess}} (see Examples below).
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
 #' ## ...
-#' \dontrun{citseq <- dbBiblioGetCitations(con,
-#'          SurveyDescription="Scientometrics", DocumentTypes="Article",
-#'          IdAuthor=c(39264,39265,39266));}
-#' \dontrun{print(citseq);}
+#' citseq <- lbsGetCitations(conn,
+#' 	surveyDescription="Scientometrics", documentTypes="Article",
+#' 	idAuthors=c(39264,39265,39266));
+#' print(citseq);
 #' ## $`Liu X.`                                # Author name
 #' ## 40116 34128 39122 29672 32343 32775      # IdDocument
 #' ##    11     4     1     0     0     0      # Citation count
@@ -70,59 +74,63 @@ NA
 #' ##     1     0     0     0     0     0     0 
 #' ## attr(,"IdAuthor")
 #' ## [1] 39266
-#' \dontrun{print(dbBiblioAssess(citseq,
+#' print(lbsAssess(citseq,
 #'    f=list(length, sum, index.h, index.g, function(x) index.rp(x,1),
-#'        function(x) sqrt(prod(index.lp(x,1))), function(x) sqrt(prod(index.lp(x,Inf)))),
-#'    captions=c("length", "sum", "index.h", "index.g", "index.w", "index.lp1", "index.lpInf")));}
+#'        function(x) sqrt(prod(index.lp(x,1))),
+#'        function(x) sqrt(prod(index.lp(x,Inf)))),
+#'    captions=c("length", "sum", "index.h", "index.g", "index.w",
+#'    "index.lp1", "index.lpInf")));
 #' ##      Name length sum index.h index.g index.w index.lp1 index.lpInf
 #' ## 3   Xu Y.      8  72       5       8       7  8.573214    5.477226
 #' ## 2 Wang Y.      7   1       1       1       1  1.000000    1.000000
 #' ## 1  Liu X.      6  16       2       4       3  4.157609    3.316625
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
-#' @seealso \code{\link{dbBiblioConnect}}, \code{\link{dbBiblioAssess}}
+#' dbDisconnect(conn);}
+#' @seealso \code{\link{lbsConnect}}, \code{\link{lbsAssess}}
 #' @export
-dbBiblioGetCitations <- function(con,
-	DocumentTypes=NULL,
-	SurveyDescription=NULL,
-	IdAuthors=NULL,
+lbsGetCitations <- function(conn,
+	documentTypes=NULL,
+	surveyDescription=NULL,
+	idAuthors=NULL,
 	verbose=TRUE
 )
 {
-	CITAN:::.dbBiblioCheckConnection(con); # will stop on invalid/dead connection
+	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 	
 	# -----------------------------------------------------
 	# Data set restrictions & subset stats
 	
-	SurveyDescription  <- CITAN:::.dbBiblio_PrepareRestriction_SurveyDescription(con, SurveyDescription);
-	DocumentTypesShort <- CITAN:::.dbBiblio_PrepareRestriction_DocumentTypes(con, DocumentTypes);
+	surveyDescription  <- CITAN:::.lbs_PrepareRestriction_SurveyDescription(conn, surveyDescription);
+	documentTypesShort <- CITAN:::.lbs_PrepareRestriction_DocumentTypes(conn, documentTypes);
 	
 	
 	
 	# Get subQueryWhere
-	if (length(DocumentTypesShort)>0)
+	if (length(documentTypesShort)>0)
 	{
 		subQueryWhere <- sprintf("(%s)",
-			paste("Type", DocumentTypesShort, sep="=", collapse=" OR "));
+			paste("Type", documentTypesShort, sep="=", collapse=" OR "));
 	} else subQueryWhere <- "1";
 
-	if (!is.null(SurveyDescription))
-		subQueryWhere <- paste(c(subQueryWhere, sprintf(" Description='%s'", SurveyDescription)), collapse=" AND ");
+	if (!is.null(surveyDescription))
+		subQueryWhere <- paste(c(subQueryWhere, sprintf(" Description='%s'", surveyDescription)), collapse=" AND ");
 	
 	
-	
-	cat("Data set restrictions:\n");
-	cat(sprintf("\tSurvey:         %s.\n", ifelse(is.null(SurveyDescription), "<ALL>", SurveyDescription)));
-	cat(sprintf("\tDocument types: %s.\n", ifelse(is.null(DocumentTypesShort), "<ALL>", paste(DocumentTypesShort, collapse=", "))));
-	cat("\n");
+	if (verbose)
+	{
+		cat("Data set restrictions:\n");
+		cat(sprintf("\tSurvey:         %s.\n", ifelse(is.null(surveyDescription), "<ALL>", surveyDescription)));
+		cat(sprintf("\tDocument types: %s.\n", ifelse(is.null(documentTypesShort), "<ALL>", paste(documentTypesShort, collapse=", "))));
+		cat("\n");
+	}
 
 	# ---------------------------------------------------------------------
 	
 	
-	if (!is.null(IdAuthors) && (!is.numeric(IdAuthors) || any(!is.finite(IdAuthors))))
-		stop("incorrect 'IdAuthors' given");
+	if (!is.null(idAuthors) && (!is.numeric(idAuthors) || any(!is.finite(idAuthors))))
+		stop("incorrect 'idAuthors' given");
 		
-	if (length(IdAuthors) == 0)
+	if (length(idAuthors) == 0)
 	{
 		query <- sprintf("
 		SELECT IdAuthor
@@ -140,23 +148,25 @@ dbBiblioGetCitations <- function(con,
 		);",
 		subQueryWhere);
 		
-		IdAuthors <- dbGetQuery(con, query)[,1];
+		idAuthors <- dbGetQuery(conn, query)[,1];
 		
-		if (length(IdAuthors) == 0) return(list());
+		if (length(idAuthors) == 0) return(list());
 	}
 	
 	
 	
-
-	
-	if (verbose) cat(sprintf("Creating citation sequences... "));
-	
 	
 	i <- 1L;
 	k <- 0L;
-	n <- as.integer(length(IdAuthors));
+	n <- as.integer(length(idAuthors));
 	citseq <- list();
 	length(citseq) <- n;
+	
+	if (verbose)
+	{
+		cat("Creating citation sequences... ");
+		window <- CITAN:::.gtk2.progressBar(0, n, info=sprintf("Creating %g citation sequences... ",n));
+	}
 	
 	while (i <= n)
 	{
@@ -171,23 +181,23 @@ dbBiblioGetCitations <- function(con,
 			JOIN Biblio_Documents ON (Biblio_AuthorsDocuments.IdDocument=Biblio_Documents.IdDocument)
 			WHERE %s
 			ORDER BY Biblio_Documents.Citations DESC",
-			sqlNumericOrNULL(IdAuthors[i]),
+			sqlNumericOrNULL(idAuthors[i]),
 			subQueryWhere
 		);
 
-		AuthorInfo <- dbGetQuery(con, query);
+		AuthorInfo <- dbGetQuery(conn, query);
 		
 		if (nrow(AuthorInfo) > 0)
 		{
 			names(citseq)[i] <- AuthorInfo$Name[1];
 			citseq[[i]] <- as.numeric(AuthorInfo$Citations);
 			names(citseq[[i]]) <- as.numeric(AuthorInfo$IdDocument);
-			attr(citseq[[i]], "IdAuthor") <- IdAuthors[i];
+			attr(citseq[[i]], "IdAuthor") <- idAuthors[i];
 			k <- k+1L;
 		}
 	
-		if (verbose && (i %% 50L == 0))
-			cat(sprintf(" %4.1f%%\b\b\b\b\b\b", i*100.0/n));
+		if (verbose) CITAN:::.gtk2.progressBar(i,n,window=window);
+		
 		i <- i+1L;
 	}
 	

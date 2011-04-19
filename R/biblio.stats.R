@@ -24,7 +24,7 @@ NA
 
 
 #' /internal/
-.dbBiblioDescriptiveStats_PrintStatsSubset <- function(con, subQueryWhere)
+.lbsDescriptiveStats_PrintStatsSubset <- function(conn, subQueryWhere)
 {
 	query <- sprintf("
 		SELECT COUNT(idDocument)
@@ -36,7 +36,7 @@ NA
 			WHERE %s
 		);",
 		subQueryWhere);
-	res <- dbGetQuery(con, query);
+	res <- dbGetQuery(conn, query);
 	cat(sprintf("Number of documents in the selected subset: %g.\n", res[1,1]));
 
 
@@ -55,7 +55,7 @@ NA
 			) AS Docs ON Docs.IdDocument=Biblio_AuthorsDocuments.IdDocument
 		);",
 		subQueryWhere);
-	res <- dbGetQuery(con, query);
+	res <- dbGetQuery(conn, query);
 	cat(sprintf("Number of authors in the selected subset:   %g.\n", res[1,1]));
 	
 	cat("\n");
@@ -64,12 +64,12 @@ NA
 
 
 #' /internal/
-.dbBiblioDescriptiveStats_PrintSurveyStats <- function(con, subQueryWhere, split2filenames)
+.lbsDescriptiveStats_PrintSurveyStats <- function(conn, subQueryWhere, split2filenames)
 {
 	if (!split2filenames)
 	{
 		query <- sprintf("
-			SELECT Description AS SurveyDescription, COUNT(IdDocument) AS DocumentCount
+			SELECT Description AS surveyDescription, COUNT(IdDocument) AS DocumentCount
 			FROM
 			(
 				SELECT DISTINCT Description, ViewBiblio_DocumentsSurveys.IdDocument
@@ -79,7 +79,7 @@ NA
 			) GROUP BY Description;",
 			subQueryWhere
 		);
-		res <- dbGetQuery(con, query);
+		res <- dbGetQuery(conn, query);
 		
 		cat("Surveys:\n");
 		print(res);
@@ -96,7 +96,7 @@ NA
 			) GROUP BY Filename;",
 			subQueryWhere
 		);
-		res <- dbGetQuery(con, query);
+		res <- dbGetQuery(conn, query);
 		
 		cat("Source files in selected survey:\n");
 		print(res);
@@ -110,9 +110,9 @@ NA
 
 
 
-#' Performs preliminary data analysis of data in a local bibliometric storage
-#' by displaying some basic descriptive statistics and plots.
-#' We may restrict ourselves to some selected document types
+#' Performs preliminary analysis of data in a Local Bibliometric Storage
+#' by calculating some basic descriptive statistics and drawing plots.
+#' We may restrict the data to any selected document types
 #' or a single survey.
 #'
 #' Plot types (accessed with \code{which}):
@@ -128,29 +128,31 @@ NA
 #'
 #' The user interaction scheme is inspired by the \code{\link{plot.lm}} code.
 #'
-#' @title Perform preliminary data analysis of data in a local bibliometric storage
-#' @param con a connection object as produced by \code{\link{dbBiblioConnect}}.
-#' @param DocumentTypes character vector or \code{NULL}; specifies document types to restrict to;
+#' @title Perform preliminary analysis of data in a Local Bibliometric Storage
+#' @param conn a connection object as produced by \code{\link{lbsConnect}}.
+#' @param documentTypes character vector or \code{NULL}; specifies document types to restrict to;
 #'    a combination of \code{Article}, \code{Article in Press}, \code{Book}, \code{Conference Paper},
 #'    \code{Editorial}, \code{Erratum}, \code{Letter}, \code{Note}, \code{Report}, \code{Review},
 #'    \code{Short Survey}. \code{NULL} means no restriction.
-#' @param SurveyDescription single character string or \code{NULL}; survey to restrict to or \code{NULL} for no restriction.
+#' @param surveyDescription single character string or \code{NULL}; survey to restrict to or \code{NULL} for no restriction.
 #' @param which if a subset of the plots is required, specify a subset of the numbers \code{1:7}.
 #' @param main title to each plot-in addition to default captions.
 #' @param ask logical; if \code{TRUE} then the user is asked to press return before each plot.
 #' @param ... additional graphical parameters, see \code{\link{plot.default}}.
 #' @param cex.caption controls the size of default captions.
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
 #' ## ...
-#' \dontrun{dbBiblioDescriptiveStats(con, SurveyDescription="Scientometrics", DocumentTypes=c("Article", "Note", "Report", "Review", "Short Survey"));}
+#' lbsDescriptiveStats(conn, surveyDescription="Scientometrics",
+#'    documentTypes=c("Article", "Note", "Report", "Review", "Short Survey"));
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
-#' @seealso \code{\link{plot.default}}, \code{\link{dbBiblioConnect}}
+#' dbDisconnect(conn);}
+#' @seealso \code{\link{plot.default}}, \code{\link{lbsConnect}}
 #' @export
-dbBiblioDescriptiveStats <- function(con,
-	DocumentTypes=NULL,
-	SurveyDescription=NULL,
+lbsDescriptiveStats <- function(conn,
+	documentTypes=NULL,
+	surveyDescription=NULL,
 	which=(1L:7L), 
 	main="",
 	ask = (prod(par("mfcol")) < length(which) && dev.interactive()),
@@ -158,18 +160,18 @@ dbBiblioDescriptiveStats <- function(con,
 	cex.caption=1
 )
 {
-	CITAN:::.dbBiblioCheckConnection(con); # will stop on invalid/dead connection
+	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 	
 	# -----------------------------------------------------
 	# Basic stats
 	
-	res <- dbGetQuery(con, "SELECT COUNT(idSource) FROM Biblio_Sources;");
+	res <- dbGetQuery(conn, "SELECT COUNT(idSource) FROM Biblio_Sources;");
 	cat(sprintf("Number of sources in the database:   %g.\n", res[1,1]));
 	
-	res <- dbGetQuery(con, "SELECT COUNT(idDocument) FROM Biblio_Documents;");
+	res <- dbGetQuery(conn, "SELECT COUNT(idDocument) FROM Biblio_Documents;");
 	cat(sprintf("Number of documents in the database: %g.\n", res[1,1]));
 
-	res <- dbGetQuery(con, "SELECT COUNT(idAuthor) FROM Biblio_Authors;");
+	res <- dbGetQuery(conn, "SELECT COUNT(idAuthor) FROM Biblio_Authors;");
 	cat(sprintf("Number of authors in the database:   %g.\n", res[1,1]));
 	
 	cat("\n");
@@ -178,41 +180,43 @@ dbBiblioDescriptiveStats <- function(con,
 	# -----------------------------------------------------
 	# Data set restrictions & subset stats
 	
-	SurveyDescription  <- CITAN:::.dbBiblio_PrepareRestriction_SurveyDescription(con, SurveyDescription);
-	DocumentTypesShort <- CITAN:::.dbBiblio_PrepareRestriction_DocumentTypes(con, DocumentTypes);
+	surveyDescription  <- CITAN:::.lbs_PrepareRestriction_SurveyDescription(conn, surveyDescription);
+	documentTypesShort <- CITAN:::.lbs_PrepareRestriction_DocumentTypes(conn, documentTypes);
 	
 	
 	
 	# Get subQueryWhere
-	if (length(DocumentTypesShort)>0)
+	if (length(documentTypesShort)>0)
 	{
 		subQueryWhere <- sprintf("(%s)",
-			paste("Type", DocumentTypesShort, sep="=", collapse=" OR "));
+			paste("Type", documentTypesShort, sep="=", collapse=" OR "));
 	} else subQueryWhere <- "1";
 
-	if (!is.null(SurveyDescription))
-		subQueryWhere <- paste(c(subQueryWhere, sprintf(" Description='%s'", SurveyDescription)), collapse=" AND ");
+	if (!is.null(surveyDescription))
+		subQueryWhere <- paste(c(subQueryWhere, sprintf(" Description='%s'", surveyDescription)), collapse=" AND ");
 	
 	
 	
 	cat("Data set restrictions:\n");
-	cat(sprintf("\tSurvey:         %s.\n", ifelse(is.null(SurveyDescription), "<ALL>", SurveyDescription)));
-	cat(sprintf("\tDocument types: %s.\n", ifelse(is.null(DocumentTypesShort), "<ALL>", paste(DocumentTypesShort, collapse=", "))));
+	cat(sprintf("\tSurvey:         %s.\n", ifelse(is.null(surveyDescription), "<ALL>", surveyDescription)));
+	cat(sprintf("\tDocument types: %s.\n", ifelse(is.null(documentTypesShort), "<ALL>", paste(documentTypesShort, collapse=", "))));
 	cat("\n");
 
 
 
-	if (length(DocumentTypesShort)>0 || !is.null(SurveyDescription))
-		.dbBiblioDescriptiveStats_PrintStatsSubset(con, subQueryWhere);
+	if (length(documentTypesShort)>0 || !is.null(surveyDescription))
+		.lbsDescriptiveStats_PrintStatsSubset(conn, subQueryWhere);
 		
 
 	
 	# -----------------------------------------------------
 	# Survey(s) stats
 	
-	.dbBiblioDescriptiveStats_PrintSurveyStats(con, subQueryWhere, !is.null(SurveyDescription));
+	.lbsDescriptiveStats_PrintSurveyStats(conn, subQueryWhere, !is.null(surveyDescription));
 	
-
+	which <- as.integer(which);
+	which <- which[which >=1 & which <= 7];
+	if (is.null(which)) return();
 	
 	# -----------------------------------------------------
 	# User interaction scheme is based on plot.lm() code
@@ -236,7 +240,7 @@ dbBiblioDescriptiveStats <- function(con,
 	
 	if (any(show[1L:5L]))
 	{
-		res <- dbGetQuery(con, sprintf("
+		res <- dbGetQuery(conn, sprintf("
 			SELECT Citations, Type, Year, Pages
 			FROM Biblio_Documents
 			JOIN ViewBiblio_DocumentsSurveys ON Biblio_Documents.IdDocument=ViewBiblio_DocumentsSurveys.IdDocument
@@ -308,7 +312,7 @@ dbBiblioDescriptiveStats <- function(con,
 			) AS DocInfo ON DocInfo.IdDocument=ViewBiblio_DocumentsCategories.IdDocument;",
 			subQueryWhere
 		);
-		res <- dbGetQuery(con, query)
+		res <- dbGetQuery(conn, query)
 	} else res <- NULL;
 
 	if (show[6L])
@@ -348,7 +352,7 @@ dbBiblioDescriptiveStats <- function(con,
 			GROUP BY (IdAuthor)",
 			subQueryWhere
 		);
-		res <- dbGetQuery(con, query)
+		res <- dbGetQuery(conn, query)
 	} else res <- NULL;
 	
 	if (show[7L])

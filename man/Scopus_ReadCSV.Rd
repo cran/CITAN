@@ -24,7 +24,7 @@ e.g. \dQuote{Kovalsky John, Smith B. W.}),
 \item Page end,
 \item \emph{not used},
 \item Number of citations received,
-\item String containing unique document identifier of the form ...id=<UNIQUE_ID>&...
+\item String containing unique document identifier of the form ...id=\emph{\strong{UNIQUE_ID}}&...
 \item \emph{not used},
 \item \emph{not used},
 \item \emph{not used},
@@ -87,16 +87,19 @@ could be helpful.}
 \code{Language} \tab Language of the document.\cr
 \code{DocumentType} \tab	Type of the document; see above.\cr
 }
-Such an object may be imported to a local bibliometric storage with \code{\link{dbBiblioImportDocuments}}.}
-\seealso{\code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}}, \code{\link{dbBiblioConnect}},
-\code{\link{Scopus_ImportSources}}, \code{\link{read.table}}, \code{\link{dbBiblioImportDocuments}}}
+Such an object may be imported to a local bibliometric storage with \code{\link{lbsImportDocuments}}.}
+\seealso{\code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}},
+\code{\link{lbsConnect}},
+\code{\link{Scopus_ImportSources}},\cr
+\code{\link{read.table}}, \code{\link{lbsImportDocuments}}}
 \arguments{\item{filename}{the name of the file which the data are to be read from, see \code{\link{read.csv}}.}
 \item{stopOnErrors}{logical; \code{TRUE} to stop on all potential parse errors or just warn otherwise.}
 \item{dbIdentifier}{single character value; database identifier, helps detect parse errors, see above.}
 \item{...}{further arguments to be passed to \code{read.csv}.}}
-\examples{\dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
+\examples{\dontrun{
+conn <- lbsConnect("Bibliometrics.db");
 ## ...
-\dontrun{data <- Scopus_ReadCSV("db_Polish_MATH/Poland_MATH_1987-1993.csv");}
-\dontrun{dbBiblioImportDocuments(con, data, "Poland_MATH");}
+data <- Scopus_ReadCSV("db_Polish_MATH/Poland_MATH_1987-1993.csv");
+lbsImportDocuments(conn, data, "Poland_MATH");
 ## ...
-\dontrun{dbDisconnect(con);}}
+dbDisconnect(conn);}}

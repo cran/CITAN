@@ -22,11 +22,11 @@ NA
 
 
 #' /internal/
-.dbBiblioCreateTable <- function(con, tablename, query, verbose)
+.lbsCreateTable <- function(conn, tablename, query, verbose)
 {
 	if (verbose) cat(sprintf("Creating table '%s'... ", tablename));
 	
-	dbExecQuery(con, query, FALSE);
+	dbExecQuery(conn, query, FALSE);
 
 	if (verbose) cat("DONE.\n");
 }
@@ -34,18 +34,18 @@ NA
 
 
 #' /internal/
-.dbBiblioCreateView <- function(con, viewname, query, verbose)
+.lbsCreateView <- function(conn, viewname, query, verbose)
 {
 	if (verbose) cat(sprintf("Creating view '%s'... ", viewname));
 	
-	dbExecQuery(con, query, FALSE);
+	dbExecQuery(conn, query, FALSE);
 
 	if (verbose) cat("DONE.\n");
 }
 
 
 
-#' Creates an empty local bibliometric storage.
+#' Creates an empty Local Bibliometric Storage.
 #'
 #' The function may be executed only if the database does not contain any tables
 #' named \code{Biblio_*} or views named \code{ViewBiblio_*}.
@@ -56,7 +56,7 @@ NA
 #'      -- Source classification codes (e.g. ASJC)
 #'    IdCategory        INTEGER PRIMARY KEY ASC,
 #'    IdCategoryGroup   INTEGER NOT NULL,
-#'    Description       VARCHAR(63),
+#'    Description       VARCHAR(63) NOT NULL,
 #'    FOREIGN KEY(IdCategoryGroup) REFERENCES Biblio_Categories(IdCategory)
 #' );
 #' }
@@ -64,7 +64,7 @@ NA
 #' \preformatted{
 #' CREATE TABLE Biblio_Countries (
 #'    IdCountry         INTEGER PRIMARY KEY ASC,
-#'    Name              VARCHAR(63) UNIQUE
+#'    Name              VARCHAR(63) NOT NULL UNIQUE
 #' );
 #' }
 #'
@@ -72,15 +72,17 @@ NA
 #' CREATE TABLE Biblio_Sources (
 #'    IdSource      INTEGER PRIMARY KEY AUTOINCREMENT,
 #'    Title         VARCHAR(255) NOT NULL,
-#'    ISSN_Print    CHAR(8) UNIQUE CHECK (length(ISSN_Print)=8 OR length(ISSN_Print) IS NULL),
-#'    ISSN_E        CHAR(8) UNIQUE CHECK (length(ISSN_E)=8 OR length(ISSN_E) IS NULL),
+#'    ISSN_Print    CHAR(8) UNIQUE CHECK
+#'       (length(ISSN_Print)=8 OR length(ISSN_Print) IS NULL),
+#'    ISSN_E        CHAR(8) UNIQUE CHECK
+#'       (length(ISSN_E)=8 OR length(ISSN_E) IS NULL),
 #'    IsActive      BOOLEAN,
 #'    IsOpenAccess  BOOLEAN,
-#'    Type          CHARACTER(2) CHECK (Type IN ('bs', 'cp', 'jo')),
+#'    Type          CHAR(2) CHECK (Type IN ('bs', 'cp', 'jo')),
 #'        -- Book Series / Conference Proceedings / Journal
-#'        -- OR NULL in all other cases
+#'        -- or NULL in all other cases
 #'    IdCountry     INTEGER,
-#'    Impact        REAL, -- e.g. value of current impact factor, SJR, SNIP, etc.
+#'    Impact        REAL, -- current value of an impact factor
 #'    FOREIGN KEY(IdCountry) REFERENCES Biblio_Countries(IdCountry)
 #' );
 #' }
@@ -98,19 +100,19 @@ NA
 #'
 #' \preformatted{
 #' CREATE TABLE Biblio_Surveys (
-#'      -- each call to dbBiblioImportDocuments() puts a new record here,
+#'      -- each call to lbsImportDocuments() puts a new record here,
 #'      -- they may be grouped using 'Description' into so-called 'Surveys'
 #'    IdSurvey       INTEGER PRIMARY KEY AUTOINCREMENT,
-#'    Description    VARCHAR(63),  -- survey group name
-#'    FileName       VARCHAR(63),  -- original file name
-#'    Timestamp      DATETIME      -- date of file import
+#'    Description    VARCHAR(63) NOT NULL,   -- survey group name
+#'    FileName       VARCHAR(63),            -- original file name
+#'    Timestamp      DATETIME                -- date of file import
 #' );
 #' }
 #'
 #' \preformatted{
 #' CREATE TABLE Biblio_Languages (
 #'    IdLanguage      INTEGER PRIMARY KEY AUTOINCREMENT,
-#'    Name            VARCHAR(63) UNIQUE
+#'    Name            VARCHAR(63) NOT NULL UNIQUE
 #' );
 #' }
 #'
@@ -126,12 +128,12 @@ NA
 #'    Year           INTEGER,
 #'    Pages          INTEGER,
 #'    Citations      INTEGER NOT NULL,
-#'    Type           CHARACTER(2) CHECK (Type IN ('ar', 'ip', 'bk',
+#'    Type           CHAR(2) CHECK (Type IN ('ar', 'ip', 'bk',
 #'        'cp', 'ed', 'er', 'le', 'no', 'rp', 're', 'sh')),
 #'        -- Article-ar / Article in Press-ip / Book-bk /
 #'        -- Conference Paper-cp / Editorial-ed / Erratum-er /
 #'        -- Letter-le/ Note-no / Report-rp / Review-re / Short Survey-sh
-#'        -- OR NULL in all other cases
+#'        -- or NULL in all other cases
 #'    FOREIGN KEY(IdSource)   REFERENCES Biblio_Sources(IdSource),
 #'    FOREIGN KEY(IdLanguage) REFERENCES Biblio_Languages(IdLanguage)
 #' );
@@ -166,7 +168,7 @@ NA
 #' );
 #' }
 #'
-#' In addition, the following view are created.
+#' In addition, the following views are created.
 #' \preformatted{
 #' CREATE VIEW ViewBiblio_DocumentsSurveys AS
 #'    SELECT
@@ -176,7 +178,8 @@ NA
 #'       Biblio_Surveys.Filename AS Filename,
 #'       Biblio_Surveys.Timestamp AS Timestamp
 #'    FROM Biblio_DocumentsSurveys
-#'    JOIN Biblio_Surveys ON Biblio_DocumentsSurveys.IdSurvey=Biblio_Surveys.IdSurvey;
+#'    JOIN Biblio_Surveys
+#'       ON Biblio_DocumentsSurveys.IdSurvey=Biblio_Surveys.IdSurvey;
 #' }
 #'
 #' \preformatted{
@@ -195,31 +198,37 @@ NA
 #'          Biblio_Categories.Description AS Description,
 #'          Biblio_Categories.IdCategoryGroup AS IdCategoryGroup
 #'       FROM Biblio_Documents
-#'       JOIN Biblio_SourcesCategories ON Biblio_Documents.IdSource=Biblio_SourcesCategories.IdSource
-#'       JOIN Biblio_Categories ON Biblio_SourcesCategories.IdCategory=Biblio_Categories.IdCategory
+#'       JOIN Biblio_SourcesCategories
+#'          ON Biblio_Documents.IdSource=Biblio_SourcesCategories.IdSource
+#'       JOIN Biblio_Categories
+#'          ON Biblio_SourcesCategories.IdCategory=Biblio_Categories.IdCategory
 #'    ) AS DocSrcCat
-#'    JOIN Biblio_Categories ON DocSrcCat.IdCategoryGroup=Biblio_Categories.IdCategory;
+#'    JOIN Biblio_Categories
+#'          ON DocSrcCat.IdCategoryGroup=Biblio_Categories.IdCategory;
 #' }
 #'
-#"
-#' @title Create a local bibliometric storage
-#' @param con a connection object as produced by \code{\link{dbBiblioConnect}}.
-#' @param verbose logical; \code{TRUE} to print out the progress of database contents' creation.
+#' \if{html}{\out{<p><img src='../doc/CITAN-lbs.png' alt='Tables in a local bibliometric storage and their relations' /></p>}}{}
+#'
+#' @title Establish a Local Bibliometric Storage
+#' @param conn a connection object as produced by \code{\link{lbsConnect}}.
+#' @param verbose logical; \code{TRUE} to inform about the progress of database contents' creation.
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
-#' \dontrun{dbBiblioCreate(con);}
-#' \dontrun{Scopus_ImportSources(con);}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
+#' lbsCreate(conn);
+#' Scopus_ImportSources(conn);
+#' ## ...
+#' dbDisconnect(conn);}
 #' @return \code{TRUE} on success.
-#' @seealso \code{\link{dbBiblioConnect}}, \code{\link{dbBiblioClear}}, \code{\link{Scopus_ImportSources}}
+#' @seealso \code{\link{lbsConnect}}, \code{\link{lbsClear}}, \code{\link{Scopus_ImportSources}}
 #' @export
-dbBiblioCreate <- function(con, verbose=TRUE)
+lbsCreate <- function(conn, verbose=TRUE)
 {
-	CITAN:::.dbBiblioCheckConnection(con); # will stop on invalid/dead connection
+	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 
 
-	tablesviews <- dbListTables(con);
+	tablesviews <- dbListTables(conn);
 	if (any(substr(tablesviews, 1, 7) == "Biblio_"))
 		stop("database is not empty");
 	if (any(substr(tablesviews, 1, 11) == "ViewBiblio_"))
@@ -231,20 +240,20 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 	query <- "CREATE TABLE Biblio_Categories (
 		IdCategory       INTEGER PRIMARY KEY ASC,
 		IdCategoryGroup  INTEGER NOT NULL,
-		Description      VARCHAR(63),
+		Description      VARCHAR(63) NOT NULL,
 		FOREIGN KEY(IdCategoryGroup) REFERENCES Biblio_Categories(IdCategory)
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_Categories", query, verbose);
+	.lbsCreateTable(conn, "Biblio_Categories", query, verbose);
 
 
 
 	query <- "CREATE TABLE Biblio_Countries (
 		IdCountry    INTEGER PRIMARY KEY ASC,
-		Name         VARCHAR(63) UNIQUE
+		Name         VARCHAR(63) NOT NULL UNIQUE
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_Countries", query, verbose);
+	.lbsCreateTable(conn, "Biblio_Countries", query, verbose);
 
 
 
@@ -255,13 +264,13 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		ISSN_E        CHAR(8) UNIQUE CHECK (length(ISSN_E)=8 OR length(ISSN_E) IS NULL),
 		IsActive      BOOLEAN,
 		IsOpenAccess  BOOLEAN,
-		Type          CHARACTER(2) CHECK (Type IN ('bs', 'cp', 'jo')),
+		Type          CHAR(2) CHECK (Type IN ('bs', 'cp', 'jo')),
 		IdCountry     INTEGER,
 		Impact        REAL,
 		FOREIGN KEY(IdCountry) REFERENCES Biblio_Countries(IdCountry)
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_Sources", query, verbose);
+	.lbsCreateTable(conn, "Biblio_Sources", query, verbose);
 
 
 
@@ -273,28 +282,28 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		FOREIGN KEY(IdCategory)   REFERENCES Biblio_Categories(IdCategory)
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_SourcesCategories", query, verbose);
+	.lbsCreateTable(conn, "Biblio_SourcesCategories", query, verbose);
 
 
 
 
 	query <- "CREATE TABLE Biblio_Surveys (
 		IdSurvey     INTEGER PRIMARY KEY AUTOINCREMENT,
-		Description  VARCHAR(63),
+		Description  VARCHAR(63) NOT NULL,
 		FileName     VARCHAR(63),
 		Timestamp    DATETIME
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_Surveys", query, verbose);
+	.lbsCreateTable(conn, "Biblio_Surveys", query, verbose);
 	
 	
 	
 	query <- "CREATE TABLE Biblio_Languages (
 		IdLanguage      INTEGER PRIMARY KEY AUTOINCREMENT,
-		Name            VARCHAR(63) UNIQUE
+		Name            VARCHAR(63) NOT NULL UNIQUE
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_Languages", query, verbose);
+	.lbsCreateTable(conn, "Biblio_Languages", query, verbose);
 
 
 	query <- "CREATE TABLE Biblio_Documents (
@@ -307,12 +316,12 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		Year           INTEGER,
 		Pages          INTEGER,
 		Citations      INTEGER       NOT NULL,
-		Type           CHARACTER(2) CHECK (Type IN ('ar', 'ip', 'bk', 'cp', 'ed', 'er', 'le', 'no', 'rp', 're', 'sh')),
+		Type           CHAR(2) CHECK (Type IN ('ar', 'ip', 'bk', 'cp', 'ed', 'er', 'le', 'no', 'rp', 're', 'sh')),
 		FOREIGN KEY(IdSource)   REFERENCES Biblio_Sources(IdSource),
 		FOREIGN KEY(IdLanguage) REFERENCES Biblio_Languages(IdLanguage)
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_Documents", query, verbose);
+	.lbsCreateTable(conn, "Biblio_Documents", query, verbose);
 
 
 
@@ -325,7 +334,7 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		FOREIGN KEY(IdDocument) REFERENCES Biblio_Documents(IdDocument)
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_DocumentsSurveys", query, verbose);
+	.lbsCreateTable(conn, "Biblio_DocumentsSurveys", query, verbose);
 
 
 
@@ -335,7 +344,7 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		Name         VARCHAR(63) NOT NULL UNIQUE
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_Authors", query, verbose);
+	.lbsCreateTable(conn, "Biblio_Authors", query, verbose);
 
 
 
@@ -348,7 +357,7 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		FOREIGN KEY(IdDocument) REFERENCES Biblio_Documents(IdDocument)
 	);"
 
-	.dbBiblioCreateTable(con, "Biblio_AuthorsDocuments", query, verbose);
+	.lbsCreateTable(conn, "Biblio_AuthorsDocuments", query, verbose);
 	
 	
 	
@@ -362,7 +371,7 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		FROM Biblio_DocumentsSurveys
 		JOIN Biblio_Surveys ON Biblio_DocumentsSurveys.IdSurvey=Biblio_Surveys.IdSurvey;";
 
-	.dbBiblioCreateView(con, "ViewBiblio_DocumentsSurveys", query, verbose);
+	.lbsCreateView(conn, "ViewBiblio_DocumentsSurveys", query, verbose);
 	
 	
 	query <- "CREATE VIEW ViewBiblio_DocumentsCategories AS
@@ -385,7 +394,7 @@ dbBiblioCreate <- function(con, verbose=TRUE)
 		) AS DocSrcCat
 		JOIN Biblio_Categories ON DocSrcCat.IdCategoryGroup=Biblio_Categories.IdCategory;";
 
-	.dbBiblioCreateView(con, "ViewBiblio_DocumentsCategories", query, verbose);
+	.lbsCreateView(conn, "ViewBiblio_DocumentsCategories", query, verbose);
 
 	# -------------------------------------------------------------------
 

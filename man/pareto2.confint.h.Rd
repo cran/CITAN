@@ -12,7 +12,9 @@ is the \eqn{\rho}-index of \eqn{F} for \eqn{\kappa(x)=nx}, see \code{\link{rho.g
 \references{Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.),
 Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr}
 \value{Vector of length 2 with the computed bounds of the confidence interval.}
-\seealso{\code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}}, \code{\link{pareto2.confint.rho}}, \code{\link{pareto2.confint.h.upper}}, \code{\link{pareto2.confint.h.upper}}}
+\seealso{\code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}},
+\code{\link{pareto2.confint.rho}},\cr
+\code{\link{pareto2.confint.h.upper}}, \code{\link{pareto2.confint.h.upper}}}
 \arguments{\item{h}{observed value of the \eqn{h}-index}
 \item{s}{scale parameter, \eqn{s>0}.}
 \item{n}{sample size.}

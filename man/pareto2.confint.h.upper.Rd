@@ -9,7 +9,9 @@ model with known scale parameter \eqn{s>0}.}
 \references{Gagolewski M., Grzegorzewski P., S-Statistics and Their Basic Properties, In: Borgelt C. et al (Eds.),
 Combining Soft Computing and Statistical Methods in Data Analysis, Springer-Verlag, 2010, 281-288.\cr}
 \value{Upper bound of the confidence interval.}
-\seealso{\code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}}, \code{\link{pareto2.confint.rho}}, \code{\link{pareto2.confint.h}}, \code{\link{pareto2.confint.h.lower}}}
+\seealso{\code{\link{index.h}}, \code{\link{ppareto2}}, \code{\link{rho.get}},
+\code{\link{pareto2.confint.rho}},\cr
+\code{\link{pareto2.confint.h}}, \code{\link{pareto2.confint.h.lower}}}
 \arguments{\item{h}{observed value of the \eqn{h}-index}
 \item{s}{scale parameter, \eqn{s>0}.}
 \item{n}{sample size.}

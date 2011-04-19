@@ -17,76 +17,91 @@
 ## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
 
 
+
 #' /internal/
 #' stops if connection is invalid or dead
-.dbBiblioCheckConnection <- function(con)
+.lbsCheckConnection <- function(conn)
 {
-	if (!class(con) == "SQLiteConnection")
-		stop("incorrect 'con' given");
+	if (!class(conn) == "SQLiteConnection")
+		stop("incorrect 'conn' given");
 
-	dbGetInfo(con); # check if con is active
+	dbGetInfo(conn); # check if conn is active
 }
 
 
 #' /internal/
-.dbBiblio_SourceTypesFull  <- c("Book Series", "Conference Proceedings", "Journal");
+.lbs_SourceTypesFull  <- c("Book Series", "Conference Proceedings", "Journal");
 
 #' /internal/
-.dbBiblio_SourceTypesShort <- c("'bs'",        "'cp'",                   "'jo'");
-
-
-#' /internal/
-.dbBiblio_DocumentTypesFull  <- c("Article", "Article in Press", "Book", "Conference Paper", "Editorial", "Erratum", "Letter", "Note", "Report", "Review", "Short Survey");
-
-#' /internal/
-.dbBiblio_DocumentTypesShort <- c("'ar'",    "'ip'",             "'bk'", "'cp'",             "'ed'",      "'er'",    "'le'",   "'no'", "'rp'",   "'re'",   "'sh'");
-
+.lbs_SourceTypesShort <- c("'bs'",        "'cp'",                   "'jo'");
 
 
 #' /internal/
-.dbBiblio_PrepareRestriction_DocumentTypes <- function(con, DocumentTypes)
+.lbs_DocumentTypesFull  <- c("Article", "Article in Press", "Book", "Conference Paper", "Editorial", "Erratum", "Letter", "Note", "Report", "Review", "Short Survey");
+
+#' /internal/
+.lbs_DocumentTypesShort <- c("'ar'",    "'ip'",             "'bk'", "'cp'",             "'ed'",      "'er'",    "'le'",   "'no'", "'rp'",   "'re'",   "'sh'");
+
+#' /internal/
+.lbs_DocumentType_ShortToFull <- function(type)
 {
-	if (is.null(DocumentTypes)) return(NULL);
-	
-	if (!is.character(DocumentTypes))
-		stop("incorrect 'DocumentTypes' given");
+	was.factor <- is.factor(type);
+	type <- as.factor(type);
+	lev <- sprintf("'%s'", levels(type));
+	for (i in 1:length(CITAN:::.lbs_DocumentTypesFull))
+	{
+		lev[lev==(CITAN:::.lbs_DocumentTypesShort[i])] <- CITAN:::.lbs_DocumentTypesFull[i];
+	}
+	levels(type) <- lev;
+	if (!was.factor) type <- as.character(type);
+	return(type);
+}
 
-	DocumentTypesShort <- character(length(DocumentTypes));
-	for (i in 1:length(DocumentTypes))
-		DocumentTypesShort[i] <- sqlSwitchOrNULL(DocumentTypes[i],
-			CITAN:::.dbBiblio_DocumentTypesFull,
-			CITAN:::.dbBiblio_DocumentTypesShort
+
+#' /internal/
+.lbs_PrepareRestriction_DocumentTypes <- function(conn, documentTypes)
+{
+	if (is.null(documentTypes)) return(NULL);
+	
+	if (!is.character(documentTypes))
+		stop("incorrect 'documentTypes' given");
+
+	documentTypesShort <- character(length(documentTypes));
+	for (i in 1:length(documentTypes))
+		documentTypesShort[i] <- sqlSwitchOrNULL(documentTypes[i],
+			CITAN:::.lbs_DocumentTypesFull,
+			CITAN:::.lbs_DocumentTypesShort
 		);
 	
-	incorrect <- which(DocumentTypesShort == "NULL");
+	incorrect <- which(documentTypesShort == "NULL");
 
 	if (length(incorrect)>0)
 	{
 		warning(sprintf("incorrect document types: %s. Ignoring.",
-			paste(DocumentTypes[incorrect], collapse=", ")));
-		DocumentTypesShort <- DocumentTypesShort[-incorrect];
+			paste(documentTypes[incorrect], collapse=", ")));
+		documentTypesShort <- documentTypesShort[-incorrect];
 	}
 	
-	if (length(DocumentTypesShort) == 0) stop("all given document types were incorrect.");
+	if (length(documentTypesShort) == 0) stop("all given document types were incorrect.");
 	
-	return(DocumentTypesShort);
+	return(documentTypesShort);
 }
 
 
 
 #' /internal/
-.dbBiblio_PrepareRestriction_SurveyDescription <- function(con, SurveyDescription)
+.lbs_PrepareRestriction_SurveyDescription <- function(conn, surveyDescription)
 {
-	if (is.null(SurveyDescription)) return(NULL);
+	if (is.null(surveyDescription)) return(NULL);
 
-	if (!is.character(SurveyDescription) || length(SurveyDescription)!=1)
-		stop("incorrect 'SurveyDescription' given");
+	if (!is.character(surveyDescription) || length(surveyDescription)!=1)
+		stop("incorrect 'surveyDescription' given");
 		
-	SurveyDescription <- sqlEscapeTrim(SurveyDescription);
+	surveyDescription <- sqlEscapeTrim(surveyDescription);
 	
-	res <- dbGetQuery(con, sprintf("SELECT * FROM Biblio_Surveys WHERE Description='%s';",
-		SurveyDescription));
+	res <- dbGetQuery(conn, sprintf("SELECT * FROM Biblio_Surveys WHERE Description='%s';",
+		surveyDescription));
 	if (nrow(res) == 0) stop("Survey not found.");
 	
-	return(SurveyDescription);
+	return(surveyDescription);
 }

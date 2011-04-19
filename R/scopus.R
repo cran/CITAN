@@ -115,7 +115,7 @@ NA
 #' \item Page end,
 #' \item \emph{not used},
 #' \item Number of citations received,
-#' \item String containing unique document identifier of the form ...id=<UNIQUE_ID>&...
+#' \item String containing unique document identifier of the form ...id=\emph{\strong{UNIQUE_ID}}&...
 #' \item \emph{not used},
 #' \item \emph{not used},
 #' \item \emph{not used},
@@ -184,16 +184,19 @@ NA
 #' \code{Language} \tab Language of the document.\cr
 #' \code{DocumentType} \tab	Type of the document; see above.\cr
 #' }
-#' Such an object may be imported to a local bibliometric storage with \code{\link{dbBiblioImportDocuments}}.
+#' Such an object may be imported to a local bibliometric storage with \code{\link{lbsImportDocuments}}.
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
 #' ## ...
-#' \dontrun{data <- Scopus_ReadCSV("db_Polish_MATH/Poland_MATH_1987-1993.csv");}
-#' \dontrun{dbBiblioImportDocuments(con, data, "Poland_MATH");}
+#' data <- Scopus_ReadCSV("db_Polish_MATH/Poland_MATH_1987-1993.csv");
+#' lbsImportDocuments(conn, data, "Poland_MATH");
 #' ## ...
-#' \dontrun{dbDisconnect(con);}
-#' @seealso \code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}}, \code{\link{dbBiblioConnect}},
-#' \code{\link{Scopus_ImportSources}}, \code{\link{read.table}}, \code{\link{dbBiblioImportDocuments}}
+#' dbDisconnect(conn);}
+#' @seealso \code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}},
+#' \code{\link{lbsConnect}},
+#' \code{\link{Scopus_ImportSources}},\cr
+#' \code{\link{read.table}}, \code{\link{lbsImportDocuments}}
 #' @export
 Scopus_ReadCSV <- function(filename, stopOnErrors=TRUE, dbIdentifier='Scopus', ...)
 {
@@ -290,11 +293,11 @@ Perhaps somethings is wrong with the end page (check for ', ' nearby).",
 
 
 #' /internal/
-.Scopus_ImportSources_Categories <- function(con, verbose)
+.Scopus_ImportSources_Categories <- function(conn, verbose)
 {
 	if (verbose) cat("Importing ASJC codes into 'Biblio_Categories'... ");
 
-	dbBeginTransaction(con);
+	dbBeginTransaction(conn);
 
 	for (i in 1:nrow(Scopus_ASJC))
 	{
@@ -305,7 +308,7 @@ Perhaps somethings is wrong with the end page (check for ', ' nearby).",
 			sqlEscapeTrim(Scopus_ASJC$Description[i])
 		);
 
-		dbExecQuery(con, query, TRUE);
+		dbExecQuery(conn, query, TRUE);
 	}
 
 	if (verbose) cat(sprintf("OK, %g records added.\n", nrow(Scopus_ASJC)));
@@ -313,11 +316,11 @@ Perhaps somethings is wrong with the end page (check for ', ' nearby).",
 
 
 #' /internal/
-.Scopus_ImportSources_Countries <- function(con, verbose)
+.Scopus_ImportSources_Countries <- function(conn, verbose)
 {
 	if (verbose) cat("Importing country list into 'Biblio_Countries'... ");
 
-	dbBeginTransaction(con);
+	dbBeginTransaction(conn);
 
 	IdCountry <- Scopus_SourceList$Country;
 	levels(IdCountry) <- sqlTrim(levels(IdCountry));
@@ -331,15 +334,15 @@ Perhaps somethings is wrong with the end page (check for ', ' nearby).",
 
 		query <- sprintf("INSERT INTO Biblio_Countries('Name') VALUES ('%s');",
 			sqlEscape(levels(IdCountry)[i]));
-		dbExecQuery(con, query, TRUE);
+		dbExecQuery(conn, query, TRUE);
 
-		levels(IdCountry)[i] <- dbGetQuery(con,
+		levels(IdCountry)[i] <- dbGetQuery(conn,
 			sprintf("SELECT IdCountry FROM Biblio_Countries WHERE Name='%s';",
 			sqlEscape(levels(IdCountry)[i])))[1,1];
 		stopifnot(!is.na(levels(IdCountry)[i]));
 	}
 
-	dbCommit(con);
+	dbCommit(conn);
 
 	levels(IdCountry)[levels(IdCountry)==""] <- NA;
 
@@ -352,16 +355,19 @@ Perhaps somethings is wrong with the end page (check for ', ' nearby).",
 
 
 #' /internal/
-.Scopus_ImportSources_Sources <- function(con, IdCountry, Impact, updateSourceIfExists, verbose)
+.Scopus_ImportSources_Sources <- function(conn, IdCountry, Impact, updateSourceIfExists, verbose)
 {
-	if (verbose) cat("Importing source list into 'Biblio_Sources'... ");
-
-	dbBeginTransaction(con);
+	dbBeginTransaction(conn);
 
 	k <- 0L;
 	i <- 1L;
-	n <- as.integer(nrow(Scopus_SourceList))
-
+	n <- as.integer(nrow(Scopus_SourceList));
+	
+	if (verbose)
+	{
+		cat("Importing source list into 'Biblio_Sources'... ");
+		window <- CITAN:::.gtk2.progressBar(0, n, info="Importing source list into 'Biblio_Sources'... ");
+	}
 
 	while (i <= n)
 	{
@@ -377,26 +383,26 @@ Perhaps somethings is wrong with the end page (check for ', ' nearby).",
 			as.integer(Scopus_SourceList$Status[i] == "Active"),
 			as.integer(Scopus_SourceList$OpenAccess[i] != "Not OA"),
 			sqlSwitchOrNULL(Scopus_SourceList$Type[i],
-			   CITAN:::.dbBiblio_SourceTypesFull,
-			   CITAN:::.dbBiblio_SourceTypesShort
+			   CITAN:::.lbs_SourceTypesFull,
+			   CITAN:::.lbs_SourceTypesShort
 			),
 			sqlNumericOrNULL(IdCountry[i]),
 			sqlNumericOrNULL(Impact[i])
 		);
 
-		dbExecQuery(con, query, TRUE);
+		dbExecQuery(conn, query, TRUE);
 
-		if (verbose && (i %% 250L == 0))
-			cat(sprintf(" %4.1f%%\b\b\b\b\b\b", i*100.0/n));
+		if (verbose) CITAN:::.gtk2.progressBar(i, n, window=window);
+		
 		i <- i+1L;
 	};
 
-	dbCommit(con);
+	dbCommit(conn);
 
 
 
 	# now check which rows were added and report missing values
-	res <- dbGetQuery(con, "SELECT IdSource FROM Biblio_Sources;");
+	res <- dbGetQuery(conn, "SELECT IdSource FROM Biblio_Sources;");
 	k <- nrow(res); # number of records added
 	omitted <- (1:n)[-res[,1]];
 	if (length(omitted) > 0)
@@ -414,18 +420,24 @@ Here are their identifiers: %s.",
 
 
 #' /internal/
-.Scopus_ImportSources_SourcesCategories <- function(con, verbose)
+.Scopus_ImportSources_SourcesCategories <- function(conn, verbose)
 {
-	if (verbose) cat("Mapping ASJC codes to sources in 'Biblio_SourcesCategories'... ");
-
-	dbBeginTransaction(con);
+	dbBeginTransaction(conn);
 
 
-	idSources <- dbGetQuery(con, "SELECT IdSource FROM Biblio_Sources;");
+	idSources <- dbGetQuery(conn, "SELECT IdSource FROM Biblio_Sources;");
 	idSources <- idSources[,1];
 	n <- length(idSources);
 	i <- 1;
 	k <- 0;
+	
+	
+	if (verbose)
+	{
+		cat("Mapping ASJC codes to sources in 'Biblio_SourcesCategories'... ");
+		window <- CITAN:::.gtk2.progressBar(0, n, info="Mapping ASJC codes to sources in 'Biblio_SourcesCategories'... ");
+	}
+	
 	while (i <= n)
 	{
 		src <- idSources[i];
@@ -448,13 +460,12 @@ Here are their identifiers: %s.",
 				query <- sprintf("INSERT INTO Biblio_SourcesCategories('IdSource', 'IdCategory')
 				   VALUES(%g, %g);", src, a);
 
-				dbExecQuery(con, query, TRUE);
+				dbExecQuery(conn, query, TRUE);
 				k <- k+1;
 			}
 		}
 
-		if (verbose && (i %% 250L == 0))
-			cat(sprintf(" %4.1f%%\b\b\b\b\b\b", i*100.0/n));
+		if (verbose) CITAN:::.gtk2.progressBar(i,n,window=window)
 
 		i <- i+1;
 	}
@@ -462,14 +473,14 @@ Here are their identifiers: %s.",
 
 	if (verbose) cat(sprintf("OK, %g records added.\n", k));
 
-	dbCommit(con);
+	dbCommit(conn);
 }
 
 
-#' Imports \emph{SciVerse Scopus} covered titles and their ASJC codes to an empty local bibliometric storage.
+#' Imports \emph{SciVerse Scopus} covered titles and their ASJC codes to an empty Local Bibliometric Storage (\acronym{LBS}).
 #'
-#' The function should be called prior to importing any document information
-#' to the bibliometric storage with \code{\link{dbBiblioImportDocuments}}.
+#' This routine should be called prior to importing any document information
+#' to the LBS with the function \code{\link{lbsImportDocuments}}.
 #'
 #' If multiple sources with the same ISSN (either Print-ISSN or E-ISSN)
 #' are found in \code{\link{Scopus_SourceList}}
@@ -482,25 +493,27 @@ Here are their identifiers: %s.",
 #' Only basic ASJC and \emph{SciVerse Scopus} source information
 #' retrieved from \code{\link{Scopus_ASJC}} (stored in the table \code{Biblio_Categories})
 #' and \code{\link{Scopus_SourceList}} (stored in tables \code{Biblio_Countries} and \code{Biblio_Sources})
-#' will be added to the bibliometric storage.
+#' will be added to the LBS.
 #'
 #'
-#' @title Import SciVerse Scopus coverage information and ASJC codes to a local bibliometric storage
-#' @param con a connection object as produced by \code{\link{dbBiblioConnect}}.
+#' @title Import SciVerse Scopus coverage information and ASJC codes to a Local Bibliometric Storage
+#' @param conn a connection object as produced by \code{\link{lbsConnect}}.
 #' @param impactColumn single character value determining column name in \code{\link{Scopus_SourceList}} with values of some source impact measurements to be imported, e.g. \code{"SJR_2009"}, or \code{NULL} if no such data should be saved.
 #' @param updateSourceIfExists logical; if \code{FALSE}, in case of sources with the same ISSN only the first will be added.
-#' @param verbose logical; \code{TRUE} to print out the progress of lengthy computations.
+#' @param verbose logical; \code{TRUE} to inform about the progress of the process.
 #' @return \code{TRUE} on success.
 #' @export
 #' @examples
-#' \dontrun{con <- dbBiblioConnect("survey007.db");}
-#' \dontrun{dbBiblioCreate(con);}
-#' \dontrun{Scopus_ImportSources(con);}
-#' \dontrun{dbDisconnect(con);}
-#' @seealso \code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}}, \code{\link{Scopus_ReadCSV}}, \code{\link{dbBiblioConnect}}, \code{\link{dbBiblioCreate}}
-Scopus_ImportSources <- function(con, impactColumn=NULL, updateSourceIfExists=FALSE, verbose=T)
+#' \dontrun{
+#' conn <- lbsConnect("Bibliometrics.db");
+#' lbsCreate(conn);
+#' Scopus_ImportSources(conn);
+#' ## ...
+#' dbDisconnect(conn);}
+#' @seealso \code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}}, \code{\link{Scopus_ReadCSV}}, \code{\link{lbsConnect}}, \code{\link{lbsCreate}}
+Scopus_ImportSources <- function(conn, impactColumn=NULL, updateSourceIfExists=FALSE, verbose=T)
 {
-	CITAN:::.dbBiblioCheckConnection(con); # will stop on invalid/dead connection
+	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 
 
 	if (is.null(impactColumn)) {
@@ -513,18 +526,18 @@ Scopus_ImportSources <- function(con, impactColumn=NULL, updateSourceIfExists=FA
 	# ----------------------------------------------------------------------
 
 
-	.Scopus_ImportSources_Categories(con, verbose)
+	.Scopus_ImportSources_Categories(conn, verbose)
 
-	IdCountry <- .Scopus_ImportSources_Countries(con, verbose)
+	IdCountry <- .Scopus_ImportSources_Countries(conn, verbose)
 
-	.Scopus_ImportSources_Sources(con, IdCountry, Impact, updateSourceIfExists, verbose)
+	.Scopus_ImportSources_Sources(conn, IdCountry, Impact, updateSourceIfExists, verbose)
 
-	.Scopus_ImportSources_SourcesCategories(con, verbose)
+	.Scopus_ImportSources_SourcesCategories(conn, verbose)
 
 
 	# ----------------------------------------------------------------------
 
-	dbExecQuery(con, "VACUUM", FALSE);
+	dbExecQuery(conn, "VACUUM", FALSE);
 
 
 

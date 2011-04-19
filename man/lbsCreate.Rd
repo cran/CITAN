@@ -1,8 +1,8 @@
-\name{dbBiblioCreate}
-\alias{dbBiblioCreate}
-\title{Create a local bibliometric storage}
-\usage{dbBiblioCreate(con, verbose=TRUE)}
-\description{Creates an empty local bibliometric storage.}
+\name{lbsCreate}
+\alias{lbsCreate}
+\title{Establish a Local Bibliometric Storage}
+\usage{lbsCreate(conn, verbose=TRUE)}
+\description{Creates an empty Local Bibliometric Storage.}
 \details{The function may be executed only if the database does not contain any tables
 named \code{Biblio_*} or views named \code{ViewBiblio_*}.
 
@@ -12,7 +12,7 @@ CREATE TABLE Biblio_Categories (
 -- Source classification codes (e.g. ASJC)
 IdCategory        INTEGER PRIMARY KEY ASC,
 IdCategoryGroup   INTEGER NOT NULL,
-Description       VARCHAR(63),
+Description       VARCHAR(63) NOT NULL,
 FOREIGN KEY(IdCategoryGroup) REFERENCES Biblio_Categories(IdCategory)
 );
 }
@@ -20,7 +20,7 @@ FOREIGN KEY(IdCategoryGroup) REFERENCES Biblio_Categories(IdCategory)
 \preformatted{
 CREATE TABLE Biblio_Countries (
 IdCountry         INTEGER PRIMARY KEY ASC,
-Name              VARCHAR(63) UNIQUE
+Name              VARCHAR(63) NOT NULL UNIQUE
 );
 }
 
@@ -28,15 +28,17 @@ Name              VARCHAR(63) UNIQUE
 CREATE TABLE Biblio_Sources (
 IdSource      INTEGER PRIMARY KEY AUTOINCREMENT,
 Title         VARCHAR(255) NOT NULL,
-ISSN_Print    CHAR(8) UNIQUE CHECK (length(ISSN_Print)=8 OR length(ISSN_Print) IS NULL),
-ISSN_E        CHAR(8) UNIQUE CHECK (length(ISSN_E)=8 OR length(ISSN_E) IS NULL),
+ISSN_Print    CHAR(8) UNIQUE CHECK
+(length(ISSN_Print)=8 OR length(ISSN_Print) IS NULL),
+ISSN_E        CHAR(8) UNIQUE CHECK
+(length(ISSN_E)=8 OR length(ISSN_E) IS NULL),
 IsActive      BOOLEAN,
 IsOpenAccess  BOOLEAN,
-Type          CHARACTER(2) CHECK (Type IN ('bs', 'cp', 'jo')),
+Type          CHAR(2) CHECK (Type IN ('bs', 'cp', 'jo')),
 -- Book Series / Conference Proceedings / Journal
--- OR NULL in all other cases
+-- or NULL in all other cases
 IdCountry     INTEGER,
-Impact        REAL, -- e.g. value of current impact factor, SJR, SNIP, etc.
+Impact        REAL, -- current value of an impact factor
 FOREIGN KEY(IdCountry) REFERENCES Biblio_Countries(IdCountry)
 );
 }
@@ -54,19 +56,19 @@ FOREIGN KEY(IdCategory)   REFERENCES Biblio_Categories(IdCategory)
 
 \preformatted{
 CREATE TABLE Biblio_Surveys (
--- each call to dbBiblioImportDocuments() puts a new record here,
+-- each call to lbsImportDocuments() puts a new record here,
 -- they may be grouped using 'Description' into so-called 'Surveys'
 IdSurvey       INTEGER PRIMARY KEY AUTOINCREMENT,
-Description    VARCHAR(63),  -- survey group name
-FileName       VARCHAR(63),  -- original file name
-Timestamp      DATETIME      -- date of file import
+Description    VARCHAR(63) NOT NULL,   -- survey group name
+FileName       VARCHAR(63),            -- original file name
+Timestamp      DATETIME                -- date of file import
 );
 }
 
 \preformatted{
 CREATE TABLE Biblio_Languages (
 IdLanguage      INTEGER PRIMARY KEY AUTOINCREMENT,
-Name            VARCHAR(63) UNIQUE
+Name            VARCHAR(63) NOT NULL UNIQUE
 );
 }
 
@@ -82,12 +84,12 @@ BibEntry       VARCHAR(511) NOT NULL,
 Year           INTEGER,
 Pages          INTEGER,
 Citations      INTEGER NOT NULL,
-Type           CHARACTER(2) CHECK (Type IN ('ar', 'ip', 'bk',
+Type           CHAR(2) CHECK (Type IN ('ar', 'ip', 'bk',
 'cp', 'ed', 'er', 'le', 'no', 'rp', 're', 'sh')),
 -- Article-ar / Article in Press-ip / Book-bk /
 -- Conference Paper-cp / Editorial-ed / Erratum-er /
 -- Letter-le/ Note-no / Report-rp / Review-re / Short Survey-sh
--- OR NULL in all other cases
+-- or NULL in all other cases
 FOREIGN KEY(IdSource)   REFERENCES Biblio_Sources(IdSource),
 FOREIGN KEY(IdLanguage) REFERENCES Biblio_Languages(IdLanguage)
 );
@@ -122,7 +124,7 @@ FOREIGN KEY(IdDocument) REFERENCES Biblio_Documents(IdDocument)
 );
 }
 
-In addition, the following view are created.
+In addition, the following views are created.
 \preformatted{
 CREATE VIEW ViewBiblio_DocumentsSurveys AS
 SELECT
@@ -132,7 +134,8 @@ Biblio_Surveys.Description AS Description,
 Biblio_Surveys.Filename AS Filename,
 Biblio_Surveys.Timestamp AS Timestamp
 FROM Biblio_DocumentsSurveys
-JOIN Biblio_Surveys ON Biblio_DocumentsSurveys.IdSurvey=Biblio_Surveys.IdSurvey;
+JOIN Biblio_Surveys
+ON Biblio_DocumentsSurveys.IdSurvey=Biblio_Surveys.IdSurvey;
 }
 
 \preformatted{
@@ -151,17 +154,24 @@ Biblio_SourcesCategories.IdCategory AS IdCategory,
 Biblio_Categories.Description AS Description,
 Biblio_Categories.IdCategoryGroup AS IdCategoryGroup
 FROM Biblio_Documents
-JOIN Biblio_SourcesCategories ON Biblio_Documents.IdSource=Biblio_SourcesCategories.IdSource
-JOIN Biblio_Categories ON Biblio_SourcesCategories.IdCategory=Biblio_Categories.IdCategory
+JOIN Biblio_SourcesCategories
+ON Biblio_Documents.IdSource=Biblio_SourcesCategories.IdSource
+JOIN Biblio_Categories
+ON Biblio_SourcesCategories.IdCategory=Biblio_Categories.IdCategory
 ) AS DocSrcCat
-JOIN Biblio_Categories ON DocSrcCat.IdCategoryGroup=Biblio_Categories.IdCategory;
-}}
+JOIN Biblio_Categories
+ON DocSrcCat.IdCategoryGroup=Biblio_Categories.IdCategory;
+}
+
+\if{html}{\out{<p><img src='../doc/CITAN-lbs.png' alt='Tables in a local bibliometric storage and their relations' /></p>}}{}}
 \value{\code{TRUE} on success.}
-\seealso{\code{\link{dbBiblioConnect}}, \code{\link{dbBiblioClear}}, \code{\link{Scopus_ImportSources}}}
-\arguments{\item{con}{a connection object as produced by \code{\link{dbBiblioConnect}}.}
-\item{verbose}{logical; \code{TRUE} to print out the progress of database contents' creation.}}
-\examples{\dontrun{con <- dbBiblioConnect("Bibliometrics.db");}
-\dontrun{dbBiblioCreate(con);}
-\dontrun{Scopus_ImportSources(con);}
+\seealso{\code{\link{lbsConnect}}, \code{\link{lbsClear}}, \code{\link{Scopus_ImportSources}}}
+\arguments{\item{conn}{a connection object as produced by \code{\link{lbsConnect}}.}
+\item{verbose}{logical; \code{TRUE} to inform about the progress of database contents' creation.}}
+\examples{\dontrun{
+conn <- lbsConnect("Bibliometrics.db");
 ## ...
-\dontrun{dbDisconnect(con);}}
+lbsCreate(conn);
+Scopus_ImportSources(conn);
+## ...
+dbDisconnect(conn);}}

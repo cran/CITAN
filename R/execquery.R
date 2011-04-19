@@ -32,25 +32,25 @@ NA
 #' of caught error details.
 #'
 #' @title Execute a query and free its resources
-#' @param con a \code{DBI} connection object.
-#' @param statement a character string  with the SQL statement.
+#' @param conn a \code{DBI} connection object.
+#' @param statement a character string with the SQL statement to be executed.
 #' @param rollbackOnError logical; if \code{TRUE}, then the function executes rollback on current transaction if an exception occurs.
 #' @seealso \code{\link{dbSendQuery}}, \code{\link{dbClearResult}}, \code{\link{dbGetQuery}}
 #' @export
-dbExecQuery <- function(con, statement, rollbackOnError=FALSE)
+dbExecQuery <- function(conn, statement, rollbackOnError=FALSE)
 {
 	if (!is.character(statement) || length(statement)!=1)
 		stop("incorrect 'statement'");
 
-	tryCatch(res <- dbSendQuery(con, statement),
+	tryCatch(res <- dbSendQuery(conn, statement),
 		error=function(err)
 		{
 			cat("\n\n*** SQL Exception caught ***\n\n");
 			cat(sprintf("Statement: %s\n", statement));
 			
-			ex <- dbGetException(con);
+			ex <- dbGetException(conn);
 			
-			if (rollbackOnError) dbRollback(con);
+			if (rollbackOnError) dbRollback(conn);
 			print(ex);
 			stop("stopping on SQL exception.");
 		}
