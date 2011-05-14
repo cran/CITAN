@@ -128,6 +128,7 @@
 	} else window <- NULL;
 	
 	info <- list();
+	length(info) <- n;
 	for (i in 1:n)
 	{
 		info[[i]] <- as.list(dbGetQuery(conn, sprintf(

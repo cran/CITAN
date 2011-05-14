@@ -19,7 +19,7 @@ FOREIGN KEY(IdCategoryGroup) REFERENCES Biblio_Categories(IdCategory)
 
 \preformatted{
 CREATE TABLE Biblio_Countries (
-IdCountry         INTEGER PRIMARY KEY ASC,
+IdCountry         INTEGER PRIMARY KEY,
 Name              VARCHAR(63) NOT NULL UNIQUE
 );
 }
@@ -165,7 +165,7 @@ ON DocSrcCat.IdCategoryGroup=Biblio_Categories.IdCategory;
 
 \if{html}{\out{<p><img src='../doc/CITAN-lbs.png' alt='Tables in a local bibliometric storage and their relations' /></p>}}{}}
 \value{\code{TRUE} on success.}
-\seealso{\code{\link{lbsConnect}}, \code{\link{lbsClear}}, \code{\link{Scopus_ImportSources}}}
+\seealso{\code{\link{lbsConnect}}, \code{\link{lbsClear}}, \code{\link{Scopus_ImportSources}}, \code{\link{lbsTidy}}}
 \arguments{\item{conn}{a connection object as produced by \code{\link{lbsConnect}}.}
 \item{verbose}{logical; \code{TRUE} to inform about the progress of database contents' creation.}}
 \examples{\dontrun{

@@ -63,7 +63,7 @@ NA
 #'
 #' \preformatted{
 #' CREATE TABLE Biblio_Countries (
-#'    IdCountry         INTEGER PRIMARY KEY ASC,
+#'    IdCountry         INTEGER PRIMARY KEY,
 #'    Name              VARCHAR(63) NOT NULL UNIQUE
 #' );
 #' }
@@ -221,7 +221,7 @@ NA
 #' ## ...
 #' dbDisconnect(conn);}
 #' @return \code{TRUE} on success.
-#' @seealso \code{\link{lbsConnect}}, \code{\link{lbsClear}}, \code{\link{Scopus_ImportSources}}
+#' @seealso \code{\link{lbsConnect}}, \code{\link{lbsClear}}, \code{\link{Scopus_ImportSources}}, \code{\link{lbsTidy}}
 #' @export
 lbsCreate <- function(conn, verbose=TRUE)
 {
@@ -249,7 +249,7 @@ lbsCreate <- function(conn, verbose=TRUE)
 
 
 	query <- "CREATE TABLE Biblio_Countries (
-		IdCountry    INTEGER PRIMARY KEY ASC,
+		IdCountry    INTEGER PRIMARY KEY,
 		Name         VARCHAR(63) NOT NULL UNIQUE
 	);"
 

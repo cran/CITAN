@@ -1,9 +1,10 @@
 \name{sqlEscape}
 \alias{sqlEscape}
-\title{Escape a string for use in an SQL query}
+\title{Escape character strings for use in an SQL query}
 \usage{sqlEscape(str, useBytes=FALSE)}
-\description{Escapes a string for use in an SQL query.}
-\details{The SQL standard specifies that single-quotes in strings are escaped by putting two single quotes in a row.
+\description{Escapes character strings for use in an SQL query.}
+\details{The SQL standard specifies that single-quotes in strings should be
+escaped by putting two single quotes in a row.
 This function repeats the quotes using \code{\link{gsub}}.}
 \value{See 'Value' for \code{\link{gsub}}.}
 \seealso{\code{\link{gsub}}, \code{\link{sqlTrim}}, \code{\link{sqlEscapeTrim}}}

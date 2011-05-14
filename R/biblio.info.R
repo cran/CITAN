@@ -52,21 +52,22 @@ lbsGetInfoAuthors <- function(conn, idAuthors)
 	if (is.null(idAuthors) || (class(idAuthors) != "numeric" && class(idAuthors) != "integer"))
 		stop("'idAuthors' must be a nonempty numeric vector.");
 		
-	query <- "SELECT IdAuthor, Name FROM Biblio_Authors WHERE 0";
-	for (i in 1:length(idAuthors))
-		query <- paste(query, sprintf(" OR IdAuthor=%g", idAuthors[i]), collapse="", sep="");
-	
+	query <- sprintf("SELECT IdAuthor, Name FROM Biblio_Authors WHERE IdAuthor IN (%s)",
+			paste(idAuthors, collapse=","));
+			
 	res <- dbGetQuery(conn, query);
+	n <- nrow(res);
 	out <- list();
+	length(out) <- n;
 	
-	if (nrow(res) > 0)
+	
+	
+	if (n < 1) return(NULL);
+	
+	for (i in 1:n)
 	{
-		length(out) <- nrow(res);
-		for (i in 1:nrow(res))
-		{
-			out[[i]] <- list(IdAuthor=res[i,1], Name=res[i,2]);
-			class(out[[i]]) <- "authorinfo";
-		}
+		out[[i]] <- list(IdAuthor=res[i,1], Name=res[i,2]);
+		class(out[[i]]) <- "authorinfo";
 	}
 
 	return(out);
@@ -110,43 +111,64 @@ lbsGetInfoDocuments <- function(conn, idDocuments)
 		
 	if (is.null(idDocuments) || (class(idDocuments) != "numeric" && class(idDocuments) != "integer"))
 		stop("'idDocuments' must be a nonempty numeric vector.");
-
-
-	whexpr <- paste("IdDocument", idDocuments, sep="=", collapse=" OR ");
-
+		
+	idDocuments_str <- paste(idDocuments, collapse=",");
 	query <- sprintf("SELECT IdDocument, Title, BibEntry, UniqueId, Pages, Citations, Year, Type
-		FROM Biblio_Documents
-		WHERE %s", whexpr);
-	
+			FROM Biblio_Documents WHERE IdDocument IN (%s) ORDER BY IdDocument",
+			idDocuments_str);
+			
 	res <- dbGetQuery(conn, query);
+	n <- nrow(res);
 	out <- list();
-	length(out) <- nrow(res);
-	
-	if (nrow(res) == 0) return(out);
-	
-	for (i in 1:nrow(res))
-	{
-		res2 <- dbGetQuery(conn, sprintf("SELECT DISTINCT Biblio_Authors.IdAuthor, Name FROM
-			Biblio_Authors
-			JOIN Biblio_AuthorsDocuments ON Biblio_Authors.IdAuthor=Biblio_AuthorsDocuments.IdAuthor
-			WHERE IdDocument=%g", res[i,1]));
+	length(out) <- n;
 
+	
+	if (n < 1) return(NULL);
+	
+	query2 <- sprintf("SELECT DISTINCT IdDocument, Biblio_Authors.IdAuthor, Name FROM
+		Biblio_AuthorsDocuments
+		JOIN Biblio_Authors ON Biblio_Authors.IdAuthor=Biblio_AuthorsDocuments.IdAuthor
+		WHERE IdDocument IN (%s) ORDER BY IdDocument",
+		idDocuments_str);
+	res2 <- dbGetQuery(conn, query2);
+	stopifnot(nrow(res2) >= 1);
+	
+
+	i <- 1;
+	k <- 1;
+	m <- nrow(res2);
+	
+	while (i <= m)
+	{
+		stopifnot(res2$IdDocument[i] == res$IdDocument[k]);
+		
+		j <- i+1;
+		while (j<=m && res2$IdDocument[i] == res2$IdDocument[j])
+			j <- j+1;
+			
 		authors <- list();
-		length(authors) <- nrow(res2);
-		for (j in 1:nrow(res2))
+		length(authors) <- j-i;
+		for (u in i:(j-1))
 		{
-			authors[[j]] <- list(IdAuthor=res2[j,1], Name=res2[j,2]);
-			class(authors[[j]]) <- "authorinfo";
+			authors[[u-i+1]] <- list(IdAuthor=res2[u,2], Name=res2[u,3]);
+			class(authors[[u-i+1]]) <- "authorinfo";
 		}
 		
-		doc <- list(IdDocument=res[i,1], Authors=authors, Title=res[i,2], BibEntry=res[i,3],
-			UniqueId=res[i,4], Pages=res[i,5], Citations=res[i,6],
-			Year=res[i,7], Type=CITAN:::.lbs_DocumentType_ShortToFull(res[i,8]));
+		doc <- list(IdDocument=res[k,1], Authors=authors, Title=res[k,2], BibEntry=res[k,3],
+			UniqueId=res[k,4], Pages=res[k,5], Citations=res[k,6],
+			Year=res[k,7], Type=CITAN:::.lbs_DocumentType_ShortToFull(res[k,8]));
 			
 		class(doc) <- "docinfo";
+	
+		out[[k]] <- doc;
 		
-		out[[i]] <- doc;
+		
+		i <- j;
+		k <- k+1;
 	}
+	stopifnot(k-1 == n);
+
+
 	return(out);
 }
 

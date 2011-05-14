@@ -3,7 +3,7 @@
 \title{Import publications to a Local Bibliometric Storage.}
 \usage{lbsImportDocuments(conn, data, surveyDescription="Default survey",
     originalFilename=attr(data, "filename"), excludeRows,
-    updateDocumentIfExists=TRUE, doVacuum=TRUE, warnISSN=FALSE,
+    updateDocumentIfExists=TRUE, warnISSN=FALSE,
     warnExactDuplicates=FALSE, verbose=TRUE)}
 \description{Imports publications from a special 14-column data frame to a Local Bibliometric Storage.
 Such an input may be created e.g. with \code{\link{Scopus_ReadCSV}}.}
@@ -49,8 +49,6 @@ field, see \code{\link{lbsCreate}}.}
 \item{originalFilename}{original file name, \code{attr(data, "filename")} is used by default.}
 \item{excludeRows}{a numeric vector with row numbers of \code{data} to exclude or \code{NULL}.}
 \item{updateDocumentIfExists}{logical; if \code{TRUE}, then documents with the same \code{UniqueId} will be updated.}
-\item{doVacuum}{logical; if \code{TRUE} then the SQL command \code{VACUUM}
-will be executed on the database after importing data to optimize and compact the Local Bibliometric Storage.}
 \item{warnISSN}{logical; if \code{TRUE} then warnings are generated if a given ISSN in not found in the table \code{Biblio_Sources}.}
 \item{warnExactDuplicates}{logical; \code{TRUE} to warn if exact duplicates are found (turned off by default).}
 \item{verbose}{logical; \code{TRUE} to inform about the progress of the process.}}

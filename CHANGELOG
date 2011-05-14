@@ -4,6 +4,23 @@ CITAN PACKAGE CHANGELOG
 
 *******************************************************************************
 
+2011.05-1 /2011-05-14/
+   * CITAN now depends on hash.
+   * discrpareto2.goftest() - goodness-of-fit test for a discrete
+       Pareto-Type II distribution.
+   * lbsTidy() - new function that makes some consistency checks on the DB.
+   * sqlNumericOrNULL, sqlStringOrNULL, sqlSwitchOrNULL - now accept
+        more than one element at a time.
+   * lbsGetInfoAuthors(), lbsGetInfoDocuments() - now allow large result sets.
+   * Scopus_ImportSources() - time-optimized (15% faster).
+   * lbsFindDuplicateTitles() - bug fixed: incorrect author count for
+        aggressiveness>=1.
+   * lbsDescriptiveStats() - bug fixed: incorrect document count for
+        1<=which<=5.
+
+
+*******************************************************************************
+
 2011.04-2 /2011-04-19/
    * CITAN now depends on RGtk2.
    * Case-insensitive ISSN, UniqueId, Language and authors' Names matching
@@ -20,7 +37,7 @@ CITAN PACKAGE CHANGELOG
    * lbsSearchDocuments() - finds documents meeting given criteria.
    * lbsGetInfoAuthors() - retrieves basic information on given authors.
    * lbsGetInfoDocuments() -  retrieves information on given documents.
-   * lbsFindDuplicateDocuments() - suggests documents to be deleted
+   * lbsFindDuplicateTitles() - suggests documents to be deleted
         (EXPERIMENTAL algorithm implemented).
    * lbsFindDuplicateAuthors() - suggests authors to be merged
         (EXPERIMENTAL algorithm implemented).

@@ -1,6 +1,6 @@
 \name{sqlTrim}
 \alias{sqlTrim}
-\title{Trim white-spaces on both sides of a string}
+\title{Trim white-spaces on both sides of character strings}
 \usage{sqlTrim(str, useBytes=FALSE)}
 \description{Trims white-spaces on both sides of a string.}
 \details{This function uses \code{\link{gsub}}.}

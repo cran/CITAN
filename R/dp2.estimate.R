@@ -36,8 +36,9 @@
 #' \code{s} \tab	the estimated parameter of scale.\cr
 #' }
 #' @export
-#' @seealso \code{\link{ppareto2}}, \code{\link{discrpareto2.mlekestimate}}
-discrpareto2.mleksestimate <- function(x, kmin=1e-4, kmax=20, smin=1e-4, smax=20)
+#' @seealso \code{\link{ppareto2}}, \code{\link{discrpareto2.mlekestimate}},\cr
+#' \code{\link{discrpareto2.goftest}}
+discrpareto2.mleksestimate <- function(x, kmin=1e-4, kmax=100, smin=1e-4, smax=100)
 {
 	if (mode(x) != "numeric") stop("'x' should be numeric");
 	x <- x[!is.na(x)];
@@ -46,7 +47,7 @@ discrpareto2.mleksestimate <- function(x, kmin=1e-4, kmax=20, smin=1e-4, smax=20
 	if (n < 2) stop("'x' should be of length at least 2");
 	if (any(x < 0.0)) stop("'x' should be non-negative");
 
-	res <- optim(c(kmin,smin), function(p,x,n) {
+	res <- optim(c((kmin+kmax)*0.5,(smin+smax)*0.5), function(p,x,n) {
 		-n*p[1]*log(p[2])-sum(log((p[2]+x)^(-p[1])-(1+p[2]+x)^(-p[1])))
 	}, gr=NULL, x, n, method="L-BFGS-B", lower=c(kmin,smin), upper=c(kmax,smax))$par
 
@@ -58,7 +59,7 @@ discrpareto2.mleksestimate <- function(x, kmin=1e-4, kmax=20, smin=1e-4, smax=20
 #' shape parameter \eqn{k} for given scale parameter \eqn{s}.
 #'
 #' If X has the Pareto-Type II distribution \eqn{P2(k,s)}
-#' then \code{Y=floor(X)} has the Discretized Pareto-Type II distribution DP2(k,s).
+#' then \code{Y=floor(X)} has the discretized Pareto-Type II distribution DP2(k,s).
 #'
 #' @title Estimation of shape parameter for the Discretized Pareto-Type II distribution (MLE)
 #' @param x a non-negative numeric vector.
@@ -68,8 +69,9 @@ discrpareto2.mleksestimate <- function(x, kmin=1e-4, kmax=20, smin=1e-4, smax=20
 #' @return
 #' A single numeric value is returned, the ML estimator of \eqn{k}.
 #' @export
-#' @seealso \code{\link{ppareto2}}, \code{\link{discrpareto2.mleksestimate}}
-discrpareto2.mlekestimate <- function(x, s, kmin=1e-4, kmax=20)
+#' @seealso \code{\link{ppareto2}}, \code{\link{discrpareto2.mleksestimate}},\cr
+#' \code{\link{discrpareto2.goftest}}
+discrpareto2.mlekestimate <- function(x, s, kmin=1e-4, kmax=100)
 {
 	if (mode(s) != "numeric" || length(s) != 1 || s <= 0) stop("'s' should be > 0");
 
@@ -80,7 +82,7 @@ discrpareto2.mlekestimate <- function(x, s, kmin=1e-4, kmax=20)
 	if (n < 2) stop("'x' should be of length at least 2");
 	if (any(x < 0.0)) stop("'x' should be non-negative");
 
-	res <- optim(kmin, function(k,x,n,s) {
+	res <- optim((kmin+kmax)*0.5, function(k,x,n,s) {
 		-n*k*log(s)-sum(log((s+x)^(-k)-(1+s+x)^(-k)))
 	}, gr=NULL, x, n, s, method="L-BFGS-B", lower=c(kmin), upper=c(kmax))$par
 

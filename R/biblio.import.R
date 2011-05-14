@@ -35,30 +35,34 @@ NA
 }
 
 
+
+
 #' /internal/
 .lbsImportDocuments_GetIdLanguage <- function(conn, data, verbose)
 {
-	IdLanguage <- data$Language;
-	levels(IdLanguage) <- sqlTrim(levels(IdLanguage));
-	for (i in 1:length(levels(IdLanguage)))
+	IdLanguage <- as.factor(data$Language);
+	lev <- levels(IdLanguage);
+	lev <- sqlEscapeTrim(lev);
+	
+	lev[nchar(lev) == 0] <- NA;
+	
+	existing <- which(!is.na(lev));
+	n <- length(existing);
+	
+	## ----- prepare queries ------------------------
+	queries1 <- sprintf("INSERT OR IGNORE INTO Biblio_Languages
+	   ('Name') VALUES (UPPER('%s'));", lev[existing]);
+	   
+	queries2 <- sprintf("SELECT IdLanguage FROM Biblio_Languages
+	   WHERE Name=UPPER('%s');", lev[existing]);
+	
+	
+	## ----- exec    queries ------------------------
+	for (i in 1:n)
 	{
-		if (is.na(levels(IdLanguage)[i]))
-			next;
-
-		if (levels(IdLanguage)[i]=="")
-			next;
-
-		query <- sprintf("INSERT OR IGNORE INTO Biblio_Languages('Name')
-			VALUES(UPPER('%s'))", sqlEscape(levels(IdLanguage)[i]));
-		dbExecQuery(conn, query, TRUE);
-
-		levels(IdLanguage)[i] <- dbGetQuery(conn,
-			sprintf("SELECT IdLanguage FROM Biblio_Languages WHERE Name=UPPER('%s');",
-			sqlEscape(levels(IdLanguage)[i])))[1,1];
-		stopifnot(!is.na(levels(IdLanguage)[i]));
+		dbExecQuery(conn, queries1[i], TRUE);
+		levels(IdLanguage)[existing[i]] <- dbGetQuery(conn, queries2[i])[1,1];
 	}
-
-	levels(IdLanguage)[levels(IdLanguage)==""] <- NA;
 
 	return(IdLanguage);
 }
@@ -66,14 +70,15 @@ NA
 
 
 #' /internal/
-.lbsImportDocuments_Add_Get_idSource <- function(conn, issn, warnISSN, i)
+.lbsImportDocuments_Add_Get_idSource <- function(conn, issn, i, warnISSN)
 {
 	if (!is.na(issn))
 	{
+		issn <- sqlStringOrNULL(issn);
 		idSource <- dbGetQuery(conn, sprintf("SELECT idSource FROM Biblio_Sources
 			WHERE UPPER(ISSN_Print)=UPPER(%s) OR UPPER(ISSN_E)=UPPER(%s)",
-			sqlStringOrNULL(issn),
-			sqlStringOrNULL(issn)
+			issn,
+			issn
 		));
 
 		if (nrow(idSource)==0)
@@ -85,7 +90,7 @@ NA
 			}
 			return(NA);
 		}	else {
-			if (nrow(idSource)>1)
+			if (nrow(idSource)>1 && warnISSN)
 				warning(sprintf("more than one source with ISSN='%s' found for record %g. Using first.", issn, i));
 			return(idSource[1,1]);
 		}
@@ -95,50 +100,25 @@ NA
 }
 
 
-#' /internal/
-.lbsImportDocuments_Add_Get_BibEntry <- function(conn, data_i)
-{
-	paste(c(
-		sqlTrim(data_i$SourceTitle[1]), 
-		sqlTrim(data_i$Year[1]), 
-		sqlTrim(data_i$Volume[1]), 
-		sqlTrim(data_i$Issue[1]), 
-		sqlTrim(data_i$ArticleNumber[1]), 
-		sqlTrim(data_i$PageStart[1]), 
-		sqlTrim(data_i$PageEnd[1])), collapse=",");
-}
+
 
 
 #' /internal/
-.lbsImportDocuments_Add <- function(conn, data, excludeRows, idSurvey,
-	IdLanguage, i, updateDocumentIfExists, warnISSN, warnExactDuplicates, verbose)
+.lbsImportDocuments_Add <- function(conn, record, idSurvey, i,
+	updateDocumentIfExists, warnExactDuplicates, warnISSN, verbose)
 {
-	if (any(excludeRows==i)) return(FALSE);
-
-	issn <- data$ISSN[i];
-	if (!is.na(issn) && nchar(issn) != 8)
-	{
-		if (nchar(issn)>0)
-			warning(sprintf("incorrect ISSN='%s' for record %g. Setting NA.", issn, i));
-		issn <- NA;
-	}
-
-	idSource <- .lbsImportDocuments_Add_Get_idSource(conn, issn, warnISSN, i);
-	BibEntry <- .lbsImportDocuments_Add_Get_BibEntry(conn, data[i,]);
-
+	idSource <- sqlNumericOrNULL(.lbsImportDocuments_Add_Get_idSource(conn, record$ISSN, i, warnISSN));
 
 
 	res <- dbGetQuery(conn, sprintf("SELECT IdDocument, IdSource, Title, BibEntry, Citations, Type
-		FROM Biblio_Documents WHERE UPPER(UniqueId)=UPPER('%s');", sqlEscapeTrim(data$UniqueId[i])));
+		FROM Biblio_Documents WHERE UPPER(UniqueId)=UPPER('%s');", record$UniqueId));
 
 	if (nrow(res) != 0)
 	{
 		documentExists <- TRUE;
 		idDocument <- res$IdDocument[1];
 		
-		if (warnExactDuplicates ||  res$Title[1] != data$Title[i] || 
-		                            res$BibEntry[1] != BibEntry ||
-		                            res$Citations[1] != ifelse(is.finite(data$Citations[i]), data$Citations[i], 0))
+		if (warnExactDuplicates)
 		{
 			warning(sprintf("source at row=%g already exists (IdSource=%g, Title='%s', Citations=%g, Type='%s'). %s.",
 				i, res$IdSource[1], res$Title[1], res$Citations[1], res$Type[1],
@@ -166,18 +146,15 @@ NA
 					Type=%s
 				WHERE IdDocument=%s;",
 				
-				sqlNumericOrNULL(idSource),
-				sqlNumericOrNULL(IdLanguage[i]),
-				sqlEscapeTrim(data$UniqueId[i]),
-				sqlEscapeTrim(data$Title[i]),
-				sqlEscape(BibEntry),
-				sqlNumericOrNULL(data$Year[i]),
-				sqlNumericOrNULL(data$PageEnd[i]-data$PageStart[i]+1),
-				ifelse(is.finite(data$Citations[i]), data$Citations[i], 0),
-				sqlSwitchOrNULL(data$DocumentType[i],
-					CITAN:::.lbs_DocumentTypesFull,
-					CITAN:::.lbs_DocumentTypesShort
-				),
+				idSource,
+				record$IdLanguage,
+				record$UniqueId,
+				record$Title,
+				record$BibEntry,
+				record$Year,
+				record$Pages,
+				record$Citations,
+				record$DocumentType,
 				sqlNumericOrNULL(idDocument)
 			);
 			dbExecQuery(conn, query, TRUE);
@@ -190,18 +167,15 @@ NA
 		query <- sprintf("INSERT OR FAIL INTO Biblio_Documents ('IdSource', 'IdLanguage',
 			'UniqueId', 'Title', 'BibEntry', 'Year', 'Pages', 'Citations', 'Type')
 			VALUES(%s, %s, '%s', '%s', '%s', %s, %s, %s, %s);",
-			sqlNumericOrNULL(idSource),
-			sqlNumericOrNULL(IdLanguage[i]),
-			sqlEscapeTrim(data$UniqueId[i]),
-			sqlEscapeTrim(data$Title[i]),
-			sqlEscape(BibEntry),
-			sqlNumericOrNULL(data$Year[i]),
-			sqlNumericOrNULL(data$PageEnd[i]-data$PageStart[i]+1),
-			ifelse(is.finite(data$Citations[i]), data$Citations[i], 0),
-			sqlSwitchOrNULL(data$DocumentType[i],
-				CITAN:::.lbs_DocumentTypesFull,
-				CITAN:::.lbs_DocumentTypesShort
-			)
+			idSource,
+			record$IdLanguage,
+			record$UniqueId,
+			record$Title,
+			record$BibEntry,
+			record$Year,
+			record$Pages,
+			record$Citations,
+			record$DocumentType
 		);
 		dbExecQuery(conn, query, TRUE);
 		
@@ -220,7 +194,7 @@ NA
 
 
 	# add authors
-	authors <- strsplit(data$Authors[i], "[[:space:]]*,[[:space:]]*")[[1]];
+	authors <- strsplit(record$Authors, "[[:space:]]*,[[:space:]]*")[[1]];
 	stopifnot(length(authors)>0);
 	for (j in 1:length(authors))
 	{
@@ -298,8 +272,6 @@ NA
 #' @param originalFilename original file name, \code{attr(data, "filename")} is used by default.
 #' @param excludeRows a numeric vector with row numbers of \code{data} to exclude or \code{NULL}.
 #' @param updateDocumentIfExists logical; if \code{TRUE}, then documents with the same \code{UniqueId} will be updated.
-#' @param doVacuum logical; if \code{TRUE} then the SQL command \code{VACUUM}
-#'        will be executed on the database after importing data to optimize and compact the Local Bibliometric Storage.
 #' @param warnISSN logical; if \code{TRUE} then warnings are generated if a given ISSN in not found in the table \code{Biblio_Sources}.
 #' @param warnExactDuplicates logical; \code{TRUE} to warn if exact duplicates are found (turned off by default).
 #' @param verbose logical; \code{TRUE} to inform about the progress of the process.
@@ -316,12 +288,14 @@ NA
 #' @export
 lbsImportDocuments <- function(conn, data, surveyDescription="Default survey",
    originalFilename=attr(data, "filename"),
-   excludeRows=NULL,  updateDocumentIfExists=TRUE, doVacuum=TRUE,
+   excludeRows=NULL,  updateDocumentIfExists=TRUE,
    warnISSN=FALSE, warnExactDuplicates=FALSE, verbose=TRUE)
 {
 	CITAN:::.lbsCheckConnection(conn); # will stop on invalid/dead connection
 
 
+
+	## ------ check data ------------------------------------------------------
 
 	if (class(data) != "data.frame")
 		stop("'data' is not a data.frame.");
@@ -355,55 +329,77 @@ lbsImportDocuments <- function(conn, data, surveyDescription="Default survey",
 	if (is.null(surveyDescription) || is.na(surveyDescription) || length(surveyDescription) != 1)
 		surveyDescription <- "Default survey";
 
-	# -------------------------------------------------------------------
+	## -------------------------------------------------------------------
+	
+	if (verbose) cat("Importing documents and their authors... ");
 
-	dbBeginTransaction(conn);
+
+	if (!is.null(excludeRows))
+		data <- data[-excludeRows,];
+	
+
 
 	idSurvey <- .lbsImportDocuments_GetSurvey(conn, surveyDescription, originalFilename, verbose);
 	stopifnot(length(idSurvey) == 1 && is.finite(idSurvey));
 
-	IdLanguage <- .lbsImportDocuments_GetIdLanguage(conn, data, verbose);
-	stopifnot(length(IdLanguage) == nrow(data));
+	data$IdLanguage <- sqlNumericOrNULL(.lbsImportDocuments_GetIdLanguage(conn, data, verbose));
+	
+	data$ISSN <- sqlEscapeTrim(data$ISSN);
+	badissn <- which(!is.na(data$ISSN) & nchar(data$ISSN) != 8);
+	if (length(badissn) > 0)
+	{
+		if (warnISSN) warning(sprintf("incorrect ISSNs for records %s. Setting NA.", paste(badissn, collapse=", ")));
+		data$ISSN[badissn]  <- NA;
+	}
+	
+	data$BibEntry <- sqlEscape(paste(
+		sqlTrim(data$SourceTitle), 
+		sqlTrim(data$Year), 
+		sqlTrim(data$Volume), 
+		sqlTrim(data$Issue), 
+		sqlTrim(data$ArticleNumber), 
+		data$PageStart, 
+		data$PageEnd,
+		sep=","));
+		
+	data$UniqueId <- sqlEscapeTrim(data$UniqueId);
+	data$Title <- sqlEscapeTrim(data$Title);
+	data$Year <- sqlNumericOrNULL(data$Year);
+	data$Pages <- sqlNumericOrNULL(data$PageEnd-data$PageStart+1);
+	data$Citations <- ifelse(is.finite(data$Citations), data$Citations, 0);
+	data$DocumentType <- sqlSwitchOrNULL(data$DocumentType,
+				CITAN:::.lbs_DocumentTypesFull,
+				CITAN:::.lbs_DocumentTypesShort
+			);
+
+	## -------------------------------------------------------------------
 	
 
-
-	i <- 1L;
 	k <- 0L;
 	n <- as.integer(nrow(data));
 	
 	if (verbose)
-	{
-		cat(sprintf("Importing documents and their authors... "));
 		window <- CITAN:::.gtk2.progressBar(0, n,
 			info=sprintf("Importing %g documents and their authors to %s/%s...",
 			n, surveyDescription, originalFilename));
-	}
 	
-	while (i <= n)
+	dbBeginTransaction(conn);
+	for (i in 1:n)
 	{
-		if (.lbsImportDocuments_Add(conn, data, excludeRows, idSurvey, IdLanguage, i,
-			updateDocumentIfExists, warnISSN, warnExactDuplicates, verbose))
+		if (.lbsImportDocuments_Add(conn, data[i,], idSurvey, i,
+			updateDocumentIfExists, warnExactDuplicates, warnISSN, verbose))
 		{
 			k <- k+1L;
 		}
 		
 		if (verbose) CITAN:::.gtk2.progressBar(i,n,window=window);
-		i <- i+1L;
 	}
-
+	dbCommit(conn);
 
 
 	if (verbose) cat(sprintf("OK, %g of %g records added to %s/%s.\n", k, n, surveyDescription, originalFilename));
 
-	# -------------------------------------------------------------------
-
-	dbCommit(conn);
-
-	# -------------------------------------------------------------------
-
-
-	if (doVacuum)
-		dbExecQuery(conn, "VACUUM", FALSE);
+	## -------------------------------------------------------------------
 
 	return(TRUE);
 }

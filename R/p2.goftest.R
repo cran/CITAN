@@ -24,6 +24,8 @@
 #' This method, proposed e.g. by Zhang and Stevens (2009), uses either the function \code{\link[ADGofTest]{ad.test}} from package \pkg{ADGofTest}
 #' or \code{\link{ks.test}} to compute the selected test.
 #'
+#' It is known that the tests have low powers.
+#'
 #' If \code{k} and \code{s} are NULL, it bases on bayesian MMS estimators, see \code{\link{pareto2.zsestimate}}.
 #' If \code{s} is not NULL, then the unbiased maximum likelihood estimator
 #' is used to determine the scale parameter (see \code{\link{pareto2.mlekestimate}}) iff it is not given.
@@ -82,6 +84,8 @@ pareto2.goftest <- function(x, k=NULL, s=NULL, #alternative = c("two.sided", "le
 		"anderson-darling" = sprintf("Anderson-Darling Goodness-of-Fit test for the Pareto-II distribution P2(%g, %g)", params$k, params$s),
 		"kolmogorov" = sprintf("Kolmogorov Goodness-of-Fit test for the Pareto-II distribution P2(%g, %g)", params$k, params$s),
 	);
+	
+	RVAL$data.name <- DNAME;
 
 	return(RVAL);
 }

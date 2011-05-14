@@ -31,7 +31,8 @@ NA
 	dups <- list();
 	res <- NULL;
 	
-	ignoreTitles.like <- toupper(ignoreTitles.like);
+	if (!is.null(ignoreTitles.like))
+		ignoreTitles.like <- toupper(ignoreTitles.like);
 	
 	if (aggressiveness == 0)
 	{
@@ -41,8 +42,8 @@ NA
 			(
 				SELECT DISTINCT Biblio_Documents.IdDocument, Title, Type, Citations
 				FROM Biblio_Documents
-				JOIN ViewBiblio_DocumentsSurveys ON ViewBiblio_DocumentsSurveys.IdDocument=Biblio_Documents.IdDocument
-				WHERE (%s) AND (%s) AND Title IN (
+				JOIN ViewBiblio_DocumentsSurveys ON Biblio_Documents.IdDocument=ViewBiblio_DocumentsSurveys.IdDocument
+				WHERE %s AND %s AND Title IN (
 					SELECT Title FROM (
 						SELECT Title, COUNT(IdDocument) AS cnt FROM Biblio_Documents
 						GROUP BY Title
@@ -57,7 +58,7 @@ NA
 		));
 		
 		n <- nrow(res);
-		if (n == 0) return(dups);
+		if (n <= 1) return(dups);
 		
 
 		window <- CITAN:::.gtk2.progressBar(0, n, info="Looking for documents with duplicate titles...");
@@ -73,7 +74,6 @@ NA
 				j <- j+1;
 				
 			k <- k+1;
-# 			dups[[k]] <- res$IdDocument[i:(j-1)];
 			dups[[k]] <- i:(j-1);
 			
 			CITAN:::.gtk2.progressBar(j-1,n,each=1,window=window);
@@ -81,20 +81,27 @@ NA
 		}
 	} else if (aggressiveness >= 1)
 	{
-		res <- dbGetQuery(conn, sprintf(
-			"SELECT Biblio_Documents.IdDocument AS IdDocument, Title, Type, COUNT(IdAuthor) AS AuthorCount
-			FROM Biblio_Documents
-			JOIN ViewBiblio_DocumentsSurveys ON ViewBiblio_DocumentsSurveys.IdDocument=Biblio_Documents.IdDocument
-			JOIN Biblio_AuthorsDocuments ON Biblio_Documents.IdDocument=Biblio_AuthorsDocuments.IdDocument
-			WHERE (%s) AND (%s)
-			GROUP BY Biblio_Documents.IdDocument
+		query <- sprintf("
+			SELECT IdDocument, Title, Type, Citations, COUNT(IdAuthor) AS AuthorCount
+			FROM
+			(
+				SELECT DISTINCT Biblio_Documents.IdDocument, Title, Type, Citations, IdAuthor
+				FROM Biblio_Documents
+				JOIN ViewBiblio_DocumentsSurveys  ON Biblio_Documents.IdDocument=ViewBiblio_DocumentsSurveys.IdDocument
+				LEFT JOIN Biblio_AuthorsDocuments ON Biblio_Documents.IdDocument=Biblio_AuthorsDocuments.IdDocument
+				WHERE %s AND %s
+			)
+			GROUP BY IdDocument
 			ORDER BY Title ASC, Citations DESC;",
-			ifelse(is.null(surveyDescription), "1", sprintf(" Description='%s'", surveyDescription)),
-			ifelse(is.null(ignoreTitles.like), "1", paste("NOT Title LIKE", sprintf("'%s'", ignoreTitles.like), collapse=" AND ", sep=" "))
-		));
+			ifelse(is.null(ignoreTitles.like), "1", paste("NOT Title LIKE", sprintf("'%s'", ignoreTitles.like), collapse=" AND ", sep=" ")),
+			ifelse(is.null(surveyDescription), "1", sprintf(" Description='%s'", surveyDescription))
+		);
+	
+		res <- dbGetQuery(conn, query);
 		
 		n <- nrow(res);
-		if (n == 0) return(dups);
+
+		if (n <= 1) return(dups);
 		
 		res$Title <- toupper(res$Title);
 		
@@ -103,7 +110,7 @@ NA
 			res$TitleComp <- (gsub("[^[:alpha:]]*", "", res$Title));
 		} else
 		{
-			window <- CITAN:::.gtk2.progressBar(0, n, info="Preparing data...");
+			window <- CITAN:::.gtk2.progressBar(i, n, info="Preparing data...");
 			res$TitleComp <- character(n);
 			mtch <- gregexpr("[[:alpha:]]+", res$Title);
 			for (i in 1:n)
@@ -145,7 +152,6 @@ NA
 			if (j-1 > i)
 			{
 				k <- k+1;
-# 				dups[[k]] <- res$IdDocument[i:(j-1)];
 				dups[[k]] <- i:(j-1);
 			}
 			
@@ -169,26 +175,30 @@ NA
 	# many results---
 	# take only two fist elements into account (they are sorted by title)
 	utility <- rep(0, k);
+
 	for (i in 1:k)
 	{
 		check <- dups[[i]];
 		stopifnot(length(check)>=2);
 		
 		if (gsub("[^[:alpha:]]*", "", res$Title[check[1]]) == gsub("[^[:alpha:]]*", "", res$Title[check[2]]))
+			utility[i] <- utility[i] + 1.0;
+			
+		utility[i] <- utility[i] + ifelse((res$AuthorCount[check[1]] == res$AuthorCount[check[2]]), 1.5, -2.3);
+		if (all(!is.na(res$Type[check[1:2]])))
 		{
-			utility[i] <- utility[i] + ifelse(res$AuthorCount[check[1]] == res$AuthorCount[check[2]], 1.5, -2.3);
-			if (all(!is.na(res$Type[check[1:2]])))
-			{
-				if (any(res$Type[check[1:2]]=="Article in Press")) utility[i] <- utility[i]+1.5;
-				if (any(res$Type[check[1:2]]=="Letter") || 
-					 any(res$Type[check[1:2]]=="Note") ||
-					 any(res$Type[check[1:2]]=="Editorial") ||
-					 any(res$Type[check[1:2]]=="Erratum"))
-					utility[i] <- utility[i]-1.3;
-			}
+			if (any(res$Type[check[1:2]]=="le") || 
+					any(res$Type[check[1:2]]=="no") ||
+					any(res$Type[check[1:2]]=="ed") ||
+					any(res$Type[check[1:2]]=="er"))
+				utility[i] <- utility[i]-1.3;
+				
+			if (any(res$Type[check[1:2]]=="ip")) utility[i] <- utility[i]+2.5;
 		}
+
 		utility[i] <- utility[i]-sqrt(length(check))+sqrt(2);
 	}
+	
 	
 	ord <- order(utility, decreasing=TRUE);
 	dups <- dups[ord];
@@ -260,7 +270,7 @@ lbsFindDuplicateTitles <- function(conn,
 	removed <- integer(0);
 	for (i in 1:n)
 	{
-		ret <- .gtk2.selectDocuments(conn, dups[[i]], sprintf("Select documents to remove (stage %g of %g)", i, n), remove=TRUE);
+		ret <- CITAN:::.gtk2.selectDocuments(conn, dups[[i]], sprintf("Select documents to remove (stage %g of %g)", i, n), remove=TRUE);
 		
 		if (is.null(ret))
 			return(removed);
@@ -334,6 +344,8 @@ lbsFindDuplicateTitles <- function(conn,
 	authors <- dbGetQuery(conn, query);
 	n <- nrow(authors);
 	
+	if (n <= 1) return(NULL);
+	
 	authors$Group <- NA;
 	authors$Name  <- toupper(authors$Name);
 	authors$Row   <- 1:n;
@@ -342,7 +354,6 @@ lbsFindDuplicateTitles <- function(conn,
 	words <- .lbsFindDuplicateAuthors_split2Words(authors$Name, ignoreWords, minWordLength);
 	
 	window <- CITAN:::.gtk2.progressBar(0, n, info=sprintf("Generating dependency graph for %g author names... ",n));
-	
 	
 	rel <- list();
 	length(rel) <- n;
@@ -387,64 +398,6 @@ lbsFindDuplicateTitles <- function(conn,
 
 	names(rel) <- authors$IdAuthor;
 	return(rel);
-
-
-	
-	
-# 	k <- 1;
-# 	i <- 1;
-# 	while (i <= n)
-# 	{
-# 		words_i <- words[[i]];
-# 		nw <- length(words_i);
-# 		
-# 		if (nw > 0)
-# 		{
-# 			if (is.na(authors$Group[i]))
-# 			{
-# 				authors$Group[i] <- k;
-# 				k <- k+1;
-# 			}
-# 
-# 			for (j in 1:nw)
-# 			{
-# 				left <- authors[is.na(authors$Group),];
-# 				if (aggressiveness == 0)
-# 				{
-# 					idx <- grep(words_i[j], left$Name, fixed=TRUE);
-# 				} else
-# 				{
-# 					idx <- agrep(words_i[j], left$Name);
-# 				}
-# 				
-# 				if (length(idx) > 0)
-# 				{
-# 					idxOrig <- left$Row[idx];
-# 					authors$Group[idxOrig] <- authors$Group[i];
-# 				}
-# 			}
-# 		}
-# 		
-# 		i <- i+1;
-# 		CITAN:::.gtk2.progressBar(i,n,window=window);
-# 	}
-# 	
-# 	authors[!is.na(authors$Group),];
-# 	authors$Group <- factor(authors$Group);
-# 	groups2ret <- table(authors$Group);
-# 	groups2ret <- groups2ret[groups2ret>1];
-# 	groups2ret <- names(groups2ret);
-# 	
-# 
-# 
-# 	merged <- list();
-# 	n <- length(merged) <- length(groups2ret);
-# 	for (i in 1:n)
-# 	{
-# 		merged[[i]] <- authors$Id[authors$Group == groups2ret[i] & !is.na(authors$Group)];
-# 	}
-# 	
-# 	return(merged);
 }
 
 
@@ -573,9 +526,9 @@ lbsFindDuplicateAuthors <- function(conn,
 		
 
 
-# 	if (is.null(graph))
 	graph <- .lbsFindDuplicateAuthors_getDupsGraph(conn, names.like, ignoreWords, minWordLength, aggressiveness, orderResultsBy);
-# 	return(graph);
+	if (is.null(graph)) return(NULL);
+
 
 	dups <- .lbsFindDuplicateAuthors_getDupsFromGraph(graph);
 	
@@ -589,7 +542,7 @@ lbsFindDuplicateAuthors <- function(conn,
 	k <- 0;
 	for (i in 1:n)
 	{
-		ret <- .gtk2.selectAuthors(conn, dups[[i]], sprintf("Select authors to merge (stage %g of %g)", i, n));
+		ret <- CITAN:::.gtk2.selectAuthors(conn, dups[[i]], sprintf("Select authors to merge (stage %g of %g)", i, n));
 		
 		if (is.null(ret))
 			return(merged);

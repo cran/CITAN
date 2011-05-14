@@ -241,12 +241,13 @@ lbsDescriptiveStats <- function(conn,
 	if (any(show[1L:5L]))
 	{
 		res <- dbGetQuery(conn, sprintf("
-			SELECT Citations, Type, Year, Pages
+			SELECT DISTINCT Biblio_Documents.IdDocument, Citations, Type, Year, Pages
 			FROM Biblio_Documents
 			JOIN ViewBiblio_DocumentsSurveys ON Biblio_Documents.IdDocument=ViewBiblio_DocumentsSurveys.IdDocument
 			WHERE %s",
 			subQueryWhere));
 	} else res <- NULL;
+
 	
 	
 	if (show[1L])
@@ -306,7 +307,7 @@ lbsDescriptiveStats <- function(conn,
 			FROM ViewBiblio_DocumentsCategories
 			JOIN
 			(
-				SELECT Biblio_Documents.IdDocument FROM Biblio_Documents
+				SELECT DISTINCT Biblio_Documents.IdDocument FROM Biblio_Documents
 				JOIN ViewBiblio_DocumentsSurveys ON Biblio_Documents.IdDocument=ViewBiblio_DocumentsSurveys.IdDocument
 				WHERE %s
 			) AS DocInfo ON DocInfo.IdDocument=ViewBiblio_DocumentsCategories.IdDocument;",
@@ -317,11 +318,23 @@ lbsDescriptiveStats <- function(conn,
 
 	if (show[6L])
 	{
-		mergepercent <- 0.01;
-		tab <- table(res$Description);
+		mergepercent <- 0.017;
+		tab <- table(as.factor(res$DescriptionGroup));
+
 		tab2 <- tab[tab>mergepercent*sum(tab)];
 		tab2 <- c(tab2, "Other"=sum(tab[tab<=mergepercent*sum(tab)]));
-		tab <- tab2;
+		
+		otab <- order(tab2);
+		for (i in 1:(length(otab)/2))
+		{
+			if (i %% 2 == 0)
+			{
+				r <- otab[length(otab)-i/2];
+				otab[length(otab)-i/2] <- otab[i];
+				otab[i] <- r;
+			}
+		}
+		tab <- tab2[otab];
 		
 		pie(tab, main=main, ...);
 		mtext(as.graphicsAnnot(captions[6]), 3, 0.25, cex=cex.caption);

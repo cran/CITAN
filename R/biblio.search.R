@@ -130,8 +130,8 @@ lbsSearchDocuments <- function(conn, titles.like=NULL, idAuthors=NULL,
 	if (!is.null(year.expr) && (class(year.expr) != "character" || length(year.expr)!=1))
 		stop("'year.expr' must be a character string.");
 		
-	if (is.null(titles.like) && is.null(idAuthors) && is.null(citations.expr) && is.null(pages.expr) && is.null(year.expr))
-		stop("at least one of: 'titles.like', 'idAuthors', 'citations.expr', 'pages.expr', 'year.expr' must not be NULL");
+	if (is.null(titles.like) && is.null(documentTypes) && is.null(idAuthors) && is.null(citations.expr) && is.null(pages.expr) && is.null(year.expr))
+		stop("at least one of: 'titles.like', 'documentTypes', 'idAuthors', 'citations.expr', 'pages.expr', 'year.expr' must not be NULL");
 		
 		
 	# Get subQueryWhere

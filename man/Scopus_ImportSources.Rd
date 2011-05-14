@@ -1,18 +1,16 @@
 \name{Scopus_ImportSources}
 \alias{Scopus_ImportSources}
 \title{Import SciVerse Scopus coverage information and ASJC codes to a Local Bibliometric Storage}
-\usage{Scopus_ImportSources(conn, impactColumn, updateSourceIfExists=FALSE,
-    verbose=T)}
+\usage{Scopus_ImportSources(conn, impactColumn, verbose=T)}
 \description{Imports \emph{SciVerse Scopus} covered titles and their ASJC codes to an empty Local Bibliometric Storage (\acronym{LBS}).}
 \details{This routine should be called prior to importing any document information
 to the LBS with the function \code{\link{lbsImportDocuments}}.
 
 If multiple sources with the same ISSN (either Print-ISSN or E-ISSN)
 are found in \code{\link{Scopus_SourceList}}
-and \code{updateSourceIfExists} is \code{FALSE}, then
-only the first matching record is added to the table \code{Biblio_Sources}.
+then only the first matching record is added to the table \code{Biblio_Sources}.
 Additionally, a warning is generated.
-Otherwise, the last non-unique record is taken into account.
+
 Note that adding all the sources takes some time.
 
 Only basic ASJC and \emph{SciVerse Scopus} source information
@@ -23,7 +21,6 @@ will be added to the LBS.}
 \seealso{\code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}}, \code{\link{Scopus_ReadCSV}}, \code{\link{lbsConnect}}, \code{\link{lbsCreate}}}
 \arguments{\item{conn}{a connection object as produced by \code{\link{lbsConnect}}.}
 \item{impactColumn}{single character value determining column name in \code{\link{Scopus_SourceList}} with values of some source impact measurements to be imported, e.g. \code{"SJR_2009"}, or \code{NULL} if no such data should be saved.}
-\item{updateSourceIfExists}{logical; if \code{FALSE}, in case of sources with the same ISSN only the first will be added.}
 \item{verbose}{logical; \code{TRUE} to inform about the progress of the process.}}
 \examples{\dontrun{
 conn <- lbsConnect("Bibliometrics.db");
