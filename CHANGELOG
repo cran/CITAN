@@ -4,6 +4,12 @@ CITAN PACKAGE CHANGELOG
 
 *******************************************************************************
 
+2011.08-1 /2011-08-11/
+   * Documentation cleanup.
+
+
+*******************************************************************************
+
 2011.05-1 /2011-05-14/
    * CITAN now depends on hash.
    * discrpareto2.goftest() - goodness-of-fit test for a discrete
