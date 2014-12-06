@@ -1,6 +1,6 @@
-## This file is part of the CITAN library.
+## This file is part of the CITAN package for R
 ##
-## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+## Copyright 2011-2014 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -17,91 +17,90 @@
 ## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
 
 
-
-#' /internal/
-#' stops if connection is invalid or dead
+# /internal/
+# stops if connection is invalid or dead
 .lbsCheckConnection <- function(conn)
 {
-	if (!class(conn) == "SQLiteConnection")
-		stop("incorrect 'conn' given");
+   if (!class(conn) == "SQLiteConnection")
+      stop("incorrect 'conn' given");
 
-	dbGetInfo(conn); # check if conn is active
+   dbGetInfo(conn); # check if conn is active
 }
 
 
-#' /internal/
+# /internal/
 .lbs_SourceTypesFull  <- c("Book Series", "Conference Proceedings", "Journal");
 
-#' /internal/
+# /internal/
 .lbs_SourceTypesShort <- c("'bs'",        "'cp'",                   "'jo'");
 
 
-#' /internal/
+# /internal/
 .lbs_DocumentTypesFull  <- c("Article", "Article in Press", "Book", "Conference Paper", "Editorial", "Erratum", "Letter", "Note", "Report", "Review", "Short Survey");
 
-#' /internal/
+# /internal/
 .lbs_DocumentTypesShort <- c("'ar'",    "'ip'",             "'bk'", "'cp'",             "'ed'",      "'er'",    "'le'",   "'no'", "'rp'",   "'re'",   "'sh'");
 
-#' /internal/
+# /internal/
 .lbs_DocumentType_ShortToFull <- function(type)
 {
-	was.factor <- is.factor(type);
-	type <- as.factor(type);
-	lev <- sprintf("'%s'", levels(type));
-	for (i in 1:length(CITAN:::.lbs_DocumentTypesFull))
-	{
-		lev[lev==(CITAN:::.lbs_DocumentTypesShort[i])] <- CITAN:::.lbs_DocumentTypesFull[i];
-	}
-	levels(type) <- lev;
-	if (!was.factor) type <- as.character(type);
-	return(type);
+   was.factor <- is.factor(type);
+   type <- as.factor(type);
+   lev <- sprintf("'%s'", levels(type));
+   for (i in 1:length(.lbs_DocumentTypesFull))
+   {
+      lev[lev==(.lbs_DocumentTypesShort[i])] <- .lbs_DocumentTypesFull[i];
+   }
+   levels(type) <- lev;
+   if (!was.factor) type <- as.character(type);
+   return(type);
 }
 
 
-#' /internal/
+# /internal/
 .lbs_PrepareRestriction_DocumentTypes <- function(conn, documentTypes)
 {
-	if (is.null(documentTypes)) return(NULL);
-	
-	if (!is.character(documentTypes))
-		stop("incorrect 'documentTypes' given");
+   if (is.null(documentTypes)) return(NULL);
 
-	documentTypesShort <- character(length(documentTypes));
-	for (i in 1:length(documentTypes))
-		documentTypesShort[i] <- sqlSwitchOrNULL(documentTypes[i],
-			CITAN:::.lbs_DocumentTypesFull,
-			CITAN:::.lbs_DocumentTypesShort
-		);
-	
-	incorrect <- which(documentTypesShort == "NULL");
+   if (!is.character(documentTypes))
+      stop("incorrect 'documentTypes' given");
 
-	if (length(incorrect)>0)
-	{
-		warning(sprintf("incorrect document types: %s. Ignoring.",
-			paste(documentTypes[incorrect], collapse=", ")));
-		documentTypesShort <- documentTypesShort[-incorrect];
-	}
-	
-	if (length(documentTypesShort) == 0) stop("all given document types were incorrect.");
-	
-	return(documentTypesShort);
+   documentTypesShort <- character(length(documentTypes));
+   for (i in 1:length(documentTypes))
+      documentTypesShort[i] <- sqlSwitchOrNULL(documentTypes[i],
+         .lbs_DocumentTypesFull,
+         .lbs_DocumentTypesShort
+      );
+
+   incorrect <- which(documentTypesShort == "NULL");
+
+   if (length(incorrect)>0)
+   {
+      warning(sprintf("incorrect document types: %s. Ignoring.",
+         paste(documentTypes[incorrect], collapse=", ")));
+      documentTypesShort <- documentTypesShort[-incorrect];
+   }
+
+   if (length(documentTypesShort) == 0) stop("all given document types were incorrect.");
+
+   return(documentTypesShort);
 }
 
 
 
-#' /internal/
+# /internal/
 .lbs_PrepareRestriction_SurveyDescription <- function(conn, surveyDescription)
 {
-	if (is.null(surveyDescription)) return(NULL);
+   if (is.null(surveyDescription)) return(NULL);
 
-	if (!is.character(surveyDescription) || length(surveyDescription)!=1)
-		stop("incorrect 'surveyDescription' given");
-		
-	surveyDescription <- sqlEscapeTrim(surveyDescription);
-	
-	res <- dbGetQuery(conn, sprintf("SELECT * FROM Biblio_Surveys WHERE Description='%s';",
-		surveyDescription));
-	if (nrow(res) == 0) stop("Survey not found.");
-	
-	return(surveyDescription);
+   if (!is.character(surveyDescription) || length(surveyDescription)!=1)
+      stop("incorrect 'surveyDescription' given");
+
+   surveyDescription <- sqlEscapeTrim(surveyDescription);
+
+   res <- dbGetQuery(conn, sprintf("SELECT * FROM Biblio_Surveys WHERE Description='%s';",
+      surveyDescription));
+   if (nrow(res) == 0) stop("Survey not found.");
+
+   return(surveyDescription);
 }

@@ -1,6 +1,6 @@
-## This file is part of the CITAN library.
+## This file is part of the CITAN package for R
 ##
-## Copyright 2011 Marek Gagolewski <gagolews@ibspan.waw.pl>
+## Copyright 2011-2014 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -16,105 +16,68 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with CITAN. If not, see <http://www.gnu.org/licenses/>.
 
-#' @include biblio.internal.R
-NA
 
-
-
-
-#' Reads bibliography entries from a 40-column CSV file created e.g.
-#' with \emph{SciVerse Scopus} (Complete format).
+#' Reads bibliography entries from a UTF-8 encoded CSV file.
 #'
-#' The function \code{\link{read.csv}}
-#' is used to read the bibliometric database. However, you may freely modify its behavior
-#' by passing further arguments (\code{...}), see the manual page of \code{\link{read.table}}
-#' for details.
 #'
-#' The CSV file should consist of exactly 40 variables.
-#' Here are their meanings (in order of appearance):
+#'
+#' The  \code{\link{read.csv}} function is used to read the bibliography.
+#' You may therefore freely modify its behavior
+#' by passing further arguments (\code{...}), see the manual page
+#' of \code{\link{read.table}} for details.
+#'
+#' The CSV file should consist at least of the following columns.
 #' \enumerate{
-#' \item Author name(s) (surname first; multiple names are comma-separated,
-#' e.g. \dQuote{Kovalsky John, Smith B. W.}),
-#' \item Document title,
-#' \item Year,
-#' \item Source title,
-#' \item Volume.
-#' \item Issue,
-#' \item Article number,
-#' \item Page start,
-#' \item Page end,
-#' \item \emph{not used},
-#' \item Number of citations received,
-#' \item String containing unique document identifier of the form ...id=\emph{\strong{UNIQUE_ID}}&...
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item Source ISSN,
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item \emph{not used},
-#' \item Language of original document,
-#' \item \emph{not used},
-#' \item Document type, one of: \dQuote{Article}, \dQuote{Article in Press},
+#' \item \code{Authors}: Author name(s) (surname first; multiple names are comma-separated,
+#' e.g. \dQuote{Smith John, Nowak G. W.}),
+#' \item \code{Title}: Document title,
+#' \item \code{Year}: Year of publication,
+#' \item \code{Source.title}: Source title, e.g. journal name,
+#' \item \code{Volume}: Volume number,
+#' \item \code{Issue}: Issue number,
+#' \item \code{Page.start}: Start page number,
+#' \item \code{Page.end}: End page number,
+#' \item \code{Cited.by}: Number of citations received,
+#' \item \code{Link}: String containing unique document identifier, by default of the form ...id=\emph{\strong{UNIQUE_ID}}&... (see \code{alternativeIdPattern} parameter),
+#' \item \code{Document.Type}: Document type, one of: \dQuote{Article}, \dQuote{Article in Press},
 #'        \dQuote{Book}, \dQuote{Conference Paper}, \dQuote{Editorial},
 #'        \dQuote{Erratum}, \dQuote{Letter}, \dQuote{Note}, \dQuote{Report},
 #'        \dQuote{Review}, \dQuote{Short Survey}, or \code{NA}
-#'        (other categories are interpreted as \code{NA}),
-#' \item Database identifier, should be the same as the value of \code{dbIdentifier}
-#'        parameter, otherwise an exception is thrown.
+#'        (other categories are treated as \code{NA}s),
+#' \item \code{Source}: Data source identifier, must be the same as the
+#'        \code{dbIdentifier} parameter value. It is used for parse errors detection.
 #' }
 #'
-#' Such a CSV file may be generated e.g. with \emph{SciVerse Scopus}
+#' The CSV file to be read may, for example, be created by \emph{SciVerse Scopus}
 #' (Export format=\emph{comma separated file, .csv (e.g. Excel)},
-#' Output=\emph{Complete format}). Note that the exported CSV file
-#'  needs some corrections in a few cases (wrong page numbers, single
-#' double quotes in string instead of two-double quotes etc.). 
-#' We suggest to make them in  \dQuote{Notepad}-like applications
-#' (in plain text).
-#' The function tries to point out the line numbers that
-#' cause potential problems. However, sometimes a support of Spreadsheet-like programs
-#' could be helpful.
+#' Output=\emph{Complete format} or \emph{Citations only}).
+#' Note that the exported CSV file sometimes needs to be corrected by hand
+#' (wrong page numbers, single double quotes in character strings instead of two-double quotes etc.).
+#' We suggest to make the corrections in a \dQuote{Notepad}-like application
+#' (in plain text). The function tries to indicate line numbers causing
+#' potential problems.
 #'
-#' @title Import bibliography entries from a 40-column CSV file.
+#' @title Import bibliography entries from a CSV file.
 #' @param filename the name of the file which the data are to be read from, see \code{\link{read.csv}}.
 #' @param stopOnErrors logical; \code{TRUE} to stop on all potential parse errors or just warn otherwise.
-#' @param dbIdentifier single character value; database identifier, helps detect parse errors, see above.
+#' @param dbIdentifier character or \code{NA}; database identifier, helps detect parse errors, see above.
+#' @param alternativeIdPattern character; regular expression used to extract AlternativeId, \code{NA} to get the id as is,
 #' @param ... further arguments to be passed to \code{read.csv}.
-#' @return A data frame (\code{data.frame}) containing the following 14 columns:
+#' @return A \code{data.frame} containing the following 11 columns:
 #' \tabular{ll}{
-#' \code{Authors} \tab	Author(s) name(s), comma-separated, surnames first.\cr
+#' \code{Authors} \tab	Author name(s), comma-separated, surnames first.\cr
 #' \code{Title} \tab	Document title.\cr
 #' \code{Year} \tab	Year of publication.\cr
-#' \code{UniqueId} \tab	Unique document identifier.\cr
+#' \code{AlternativeId} \tab	Unique document identifier.\cr
 #' \code{SourceTitle} \tab	Title of the source containing the document.\cr
 #' \code{Volume} \tab	Volume.\cr
 #' \code{Issue} \tab	Issue.\cr
-#' \code{ArticleNumber} \tab Article number (identifier).\cr
 #' \code{PageStart} \tab	Start page; numeric.\cr
 #' \code{PageEnd} \tab	End page; numeric.\cr
-#' \code{Citations} \tab	Number of citations.\cr
-#' \code{ISSN} \tab	ISSN of the source.\cr
-#' \code{Language} \tab Language of the document.\cr
+#' \code{Citations} \tab	Number of citations; numeric.\cr
 #' \code{DocumentType} \tab	Type of the document; see above.\cr
 #' }
-#' Such an object may be imported to a local bibliometric storage with \code{\link{lbsImportDocuments}}.
+#' The object returned may be imported into a local bibliometric storage via \code{\link{lbsImportDocuments}}.
 #' @examples
 #' \dontrun{
 #' conn <- lbsConnect("Bibliometrics.db");
@@ -122,102 +85,109 @@ NA
 #' data <- Scopus_ReadCSV("db_Polish_MATH/Poland_MATH_1987-1993.csv");
 #' lbsImportDocuments(conn, data, "Poland_MATH");
 #' ## ...
-#' dbDisconnect(conn);}
+#' lbsDisconnect(conn);}
 #' @seealso \code{\link{Scopus_ASJC}}, \code{\link{Scopus_SourceList}},
 #' \code{\link{lbsConnect}},
 #' \code{\link{Scopus_ImportSources}},\cr
 #' \code{\link{read.table}}, \code{\link{lbsImportDocuments}}
 #' @export
-Scopus_ReadCSV <- function(filename, stopOnErrors=TRUE, dbIdentifier='Scopus', ...)
+Scopus_ReadCSV <- function(filename, stopOnErrors=TRUE, dbIdentifier='Scopus', alternativeIdPattern="^.*\\id=|\\&.*$", ...)
 {
-	data <- read.csv(filename, colClasses=c(
-			"character", "character", "numeric",   "character", "character",
-			"character", "character", "character", "character", "character",
-			"numeric",   "character", "character", "character", "character",
-			"character", "character", "character", "character", "character",
-			"character", "character", "character", "character", "character",
-			"character", "character", "character", "character", "character",
-			"character", "character", "character", "character", "character",
-			"character", "factor",    "character", "factor", "character"
-		),
-		header = T, encoding="UTF-8", fileEncoding="UTF-8",
-		col.names=c(
-			"Authors", "Title", "Year", "SourceTitle", "Volume",
-			"Issue", "ArticleNumber", "PageStart", "PageEnd", "X10",
-			"Citations", "UniqueId", "X13", "X14", "X15",
-			"X16", "X17", "X18", "X19", "X20",
-			"X21", "X22", "X23", "X24", "X25",
-			"X26", "X27", "X28", "X29", "X30",
-			"X31", "ISSN", "X33", "X34", "X35",
-			"X36", "Language", "X38", "DocumentType", "X40"
-		), ...);
+   datafile <- read.csv(filename, header = T, encoding="UTF-8", fileEncoding="UTF-8", stringsAsFactors=FALSE, ...);
 
-	
-	data$UniqueId <- gsub("^.*\\id=|\\&.*$", "", data$UniqueId);
-	data$UniqueId[data$UniqueId == ""] <- NA;
-	
-	
-	naUniqueId <- which(is.na(data$UniqueId));
-	if (length(naUniqueId) > 0)
-	{
-		msg <- (sprintf("some documents do not have unique identifiers. Check line %s (or its neighborhood). \
-Perhaps somethings is wrong with the end page (check for ', ' nearby).",
-			naUniqueId[1]+1));
-			
-		if (stopOnErrors) stop(msg) else warning(msg);
-	}
-	
-	checkUniqueId <- unique(data$UniqueId, incomparables=NA);
-	if (length(checkUniqueId) != nrow(data))
-	{
-		msg <- (sprintf("repeating (non-unique) document identifiers at rows: %s.",
-			paste((1:nrow(data))[-checkUniqueId], collapse=", ")));
-			
-		if (stopOnErrors) stop(msg) else warning(msg);
-	}
-	
-	
-	
-	checkCitations <- which(data$Citations < 0 | data$Citations>100000);
-	if (length(checkCitations) > 0)
-	{
-		msg <- (sprintf("something is wrong with citation counts at rows: %s.",
-			paste((1:nrow(data))[-checkCitations], collapse=", ")));
-			
-		if (stopOnErrors) stop(msg) else warning(msg);
-	}
+   if (!is.na(dbIdentifier) && is.null(datafile$Source)) stop("Column not found: `Source'.");
+   if (is.null(datafile$Authors)) stop("Column not found: `Authors'.");
+   if (is.null(datafile$Title)) stop("Column not found: `Title'.");
+   if (is.null(datafile$Year)) stop("Column not found: `Year'.");
+   if (is.null(datafile$Source.title)) stop("Column not found: `Source.title'.");
+   if (is.null(datafile$Volume)) stop("Column not found: `Volume'.");
+   if (is.null(datafile$Issue)) stop("Column not found: `Issue'.");
+   if (is.null(datafile$Page.start)) stop("Column not found: `Page.start'.");
+   if (is.null(datafile$Page.end)) stop("Column not found: `Page.end'.");
+   if (is.null(datafile$Cited.by)) stop("Column not found: `Cited.by'.");
+   if (is.null(datafile$Link)) stop("Column not found: `Link'.");
+   if (is.null(datafile$Document.Type)) stop("Column not found: `Document.Type'.");
 
 
+   if (!is.na(dbIdentifier) && any(datafile$Source != dbIdentifier))
+   {
+      msg <- (sprintf("source database does not match 'dbIdentifier'. This may possibly indicate a parse error. Check records: %s.",
+         paste(which(datafile$Source != dbIdentifier), collapse=", ")));
 
-	if (any(data$X40 != dbIdentifier))
-	{
-		msg <- (sprintf("source database does not match 'dbIdentifier'. This may possibly indicate a parse error. Check records: %s.",
-			paste(which(data$X40 != dbIdentifier), collapse=", ")));
-			
-		if (stopOnErrors) stop(msg) else warning(msg);
-	}
-	
-	
-	data$PageStart[!is.na(gsub("^([[:digit:]]+)$", NA, data$PageStart))] <- NA;
-	data$PageEnd  [!is.na(gsub("^([[:digit:]]+)$", NA, data$PageEnd  ))] <- NA;
-	
-	data$PageStart <- as.numeric(data$PageStart);
-	data$PageEnd   <- as.numeric(data$PageEnd);
-	
-	checkPages <- which((data$PageStart<0) | (data$PageEnd<data$PageStart) | (data$PageEnd-data$PageStart>10000));
-	if (length(checkPages) > 0)
-	{
-		msg <- (sprintf("some documents seem to have wrong page numbers. Check line %s (or its neighborhood).",
-			checkPages[1]+1));
-			
-		if (stopOnErrors) stop(msg) else warning(msg);
-	}
+      if (stopOnErrors) stop(msg) else warning(msg);
+   }
+
+
+   if (!is.na(alternativeIdPattern))
+   {
+      datafile$AlternativeId <- gsub(alternativeIdPattern, "", datafile$Link); # REG EXP
+   } else {
+      datafile$AlternativeId <- datafile$Link; # AS IS
+   }
+   datafile$AlternativeId[datafile$AlternativeId == ""] <- NA;
+
+
+   naAlternativeId <- which(is.na(datafile$AlternativeId));
+   if (length(naAlternativeId) > 0)
+   {
+      msg <- (sprintf("some documents do not have unique identifiers. Check line %s (or its neighborhood). \
+   Perhaps somethings is wrong with the end page (check for ', ' nearby).",
+         naAlternativeId[1]+1));
+
+      if (stopOnErrors) stop(msg) else warning(msg);
+   }
+
+   checkAlternativeId <- unique(datafile$AlternativeId, incomparables=NA);
+   if (length(checkAlternativeId) != nrow(datafile))
+   {
+      msg <- (sprintf("non-unique document identifiers at rows: %s.",
+         paste((1:nrow(datafile))[-checkAlternativeId], collapse=", ")));
+
+      if (stopOnErrors) stop(msg) else warning(msg);
+   }
+
+
+   datafile$Cited.by[!is.na(gsub("^([[:digit:]]+)$", NA, datafile$Cited.by))] <- NA;
+   datafile$Cited.by <- as.numeric(datafile$Cited.by);
+   checkCitations <- which(datafile$Cited.by < 0 | datafile$Cited.by>100000);
+   if (length(checkCitations) > 0)
+   {
+      msg <- (sprintf("something is wrong with citation counts at rows: %s.",
+         paste((1:nrow(datafile))[-checkCitations], collapse=", ")));
+
+      if (stopOnErrors) stop(msg) else warning(msg);
+   }
+
+
+   datafile$Page.start[!is.na(gsub("^([[:digit:]]+)$", NA, datafile$Page.start))] <- NA;
+   datafile$Page.end  [!is.na(gsub("^([[:digit:]]+)$", NA, datafile$Page.end  ))] <- NA;
+
+   datafile$Page.start <- as.numeric(datafile$Page.start);
+   datafile$Page.end   <- as.numeric(datafile$Page.end);
+
+   checkPages <- which((datafile$Page.start<0) | (datafile$Page.end<datafile$Page.start) | (datafile$Page.end-datafile$Page.start>10000));
+   if (length(checkPages) > 0)
+   {
+      msg <- (sprintf("some documents seem to have incorrect page numbers. Check line %s (or its neighborhood).",
+         checkPages[1]+1));
+
+      if (stopOnErrors) stop(msg) else warning(msg);
+   }
 
 
 
-	data <- data[,which(substr(names(data),1,1)!="X")]; # remove unnecessary columns
+   datafile <- data.frame(Authors=as.character(datafile$Authors),
+                      Title=as.character(datafile$Title),
+                      Year=datafile$Year,
+                      AlternativeId=datafile$AlternativeId,
+                      SourceTitle=as.character(datafile$Source.title),
+                      Volume=datafile$Volume,
+                      Issue=datafile$Issue,
+                      PageStart=datafile$Page.start,
+                      PageEnd=datafile$Page.end,
+                      Citations=datafile$Cited.by,
+                      DocumentType=datafile$Document.Type);
 
-	attr(data, "filename") <- filename;
-	data
+   attr(datafile, "filename") <- filename;
+   return(datafile);
 }
-
