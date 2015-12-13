@@ -1,6 +1,6 @@
 ## This file is part of the CITAN package for R
 ##
-## Copyright 2011-2014 Marek Gagolewski
+## Copyright 2011-2015 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -75,9 +75,11 @@
 #' ## 1  Liu X.      6  16       2       4       3  4.157609    3.316625
 #' ## ...
 #' dbDisconnect(conn);}
-#' @seealso \code{\link{lbsConnect}}, \code{\link{lbsGetCitations}}
 #' @export
+#'
 #' @importFrom agop index_h
+#'
+#' @seealso \code{\link{lbsConnect}}, \code{\link{lbsGetCitations}}
 lbsAssess <- function(citseq, f=list(length, index_h), captions=c("length", "index_h"), orderByColumn=2,
 	bestRanks=20, verbose=T)
 {

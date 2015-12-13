@@ -1,6 +1,6 @@
 ## This file is part of the CITAN package for R
 ##
-## Copyright 2011-2014 Marek Gagolewski
+## Copyright 2011-2015 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -99,7 +99,7 @@ sqlSwitchOrNULL <- function(value, search, replace)
 # @seealso \code{\link{sqlTrim}}, \code{\link{sqlEscapeTrim}}
 sqlEscape <- function(str, useBytes=FALSE)
 {
-	stri_replace_all_fixed("'", "''", str)
+	stri_replace_all_fixed(str, "'", "''")
 }
 
 

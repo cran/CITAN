@@ -1,6 +1,6 @@
 ## This file is part of the CITAN package for R
 ##
-## Copyright 2011-2014 Marek Gagolewski
+## Copyright 2011-2015 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -31,15 +31,15 @@
 #' }
 #' @examples
 #' \dontrun{
-#' #' conn <- dbBiblioConnect("Bibliometrics.db");
+#' conn <- dbBiblioConnect("Bibliometrics.db");
 #' ## ...
 #' id <- lbsSearchAuthors(conn, c("Smith\%", "Knuth D.E.", "V_n \%"));
 #' lbsGetInfoAuthors(conn, id);
 #' ## ...}
+#' @export
 #' @seealso \code{\link{lbsSearchAuthors}}, \code{\link{lbsSearchDocuments}},
 #' \code{\link{lbsGetInfoDocuments}},\cr
 #' \code{\link{as.character.authorinfo}}, \code{\link{print.authorinfo}},
-#' @export
 lbsGetInfoAuthors <- function(conn, idAuthors)
 {
    .lbsCheckConnection(conn); # will stop on invalid/dead connection
@@ -96,10 +96,10 @@ lbsGetInfoAuthors <- function(conn, idAuthors)
 #' 	idAuthors=lbsSearchAuthors(conn, "Knuth\%"));
 #' lbsGetInfoDocuments(conn, id);
 #' ## ...}
+#' @export
 #' @seealso \code{\link{print.docinfo}}, \code{\link{lbsSearchDocuments}},
 #' \code{\link{lbsGetInfoAuthors}},\cr
 #' \code{\link{as.character.authorinfo}}, \code{\link{as.character.docinfo}}
-#' @export
 lbsGetInfoDocuments <- function(conn, idDocuments)
 {
    .lbsCheckConnection(conn); # will stop on invalid/dead connection

@@ -1,6 +1,6 @@
 ## This file is part of the CITAN package for R
 ##
-## Copyright 2011-2014 Marek Gagolewski
+## Copyright 2011-2015 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -56,8 +56,12 @@
 #'    documentTypes=c("Article", "Note", "Report", "Review", "Short Survey"));
 #' ## ...
 #' lbsDisconnect(conn);}
-#' @seealso \code{\link{plot.default}}, \code{\link{lbsConnect}}
+#'
 #' @export
+#'
+#' @seealso
+#' \code{\link{plot.default}},
+#' \code{\link{lbsConnect}}
 lbsDescriptiveStats <- function(conn,
    documentTypes=NULL,
    surveyDescription=NULL,

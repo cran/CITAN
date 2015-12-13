@@ -1,6 +1,6 @@
 ## This file is part of the CITAN package for R
 ##
-## Copyright 2011-2014 Marek Gagolewski
+## Copyright 2011-2015 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -51,8 +51,13 @@
 #' lbsDeleteDocuments(conn, listdoc);
 #' dbCommit(conn);
 #' ## ...}
-#' @seealso \code{\link{lbsDeleteDocuments}}, \code{\link{lbsFindDuplicateAuthors}}, \code{\link{lbsGetInfoDocuments}}
+#'
 #' @export
+#'
+#' @seealso
+#' \code{\link{lbsDeleteDocuments}},
+#' \code{\link{lbsFindDuplicateAuthors}},
+#' \code{\link{lbsGetInfoDocuments}}
 lbsFindDuplicateTitles <- function(conn,
    surveyDescription=NULL,
    ignoreTitles.like=NULL,
@@ -267,7 +272,7 @@ lbsFindDuplicateTitles <- function(conn,
    removed <- integer(0);
    for (i in 1:n)
    {
-#' @TODO: Check whether .gtk2.selectDocuments can be moved as an internal function
+# @TODO: Check whether .gtk2.selectDocuments can be moved as an internal function
       ret <- .gtk2.selectDocuments(conn, dups[[i]], sprintf("Select documents to remove (stage %g of %g)", i, n), remove=TRUE);
 
       if (is.null(ret))

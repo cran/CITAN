@@ -1,6 +1,6 @@
 ## This file is part of the CITAN package for R
 ##
-## Copyright 2011-2014 Marek Gagolewski
+## Copyright 2011-2015 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -81,7 +81,7 @@ Scopus_ImportSources <- function(conn, verbose=T)
          );
       ## --------------------------------------------------------------------
 
-      dbBeginTransaction(conn);
+      dbBegin(conn);
       for (i in 1:n) dbExecQuery(conn, queries[i], TRUE);
       dbCommit(conn);
 
@@ -144,7 +144,7 @@ Scopus_ImportSources <- function(conn, verbose=T)
       omitted <- numeric(0);
       k <- 0;
       dbExecQuery(conn, "PRAGMA journal_mode = MEMORY");
-      dbBeginTransaction(conn);
+      dbBegin(conn);
       for (i in 1:n)
       {
          tryCatch(

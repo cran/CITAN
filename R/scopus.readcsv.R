@@ -1,6 +1,6 @@
 ## This file is part of the CITAN package for R
 ##
-## Copyright 2011-2014 Marek Gagolewski
+## Copyright 2011-2015 Marek Gagolewski
 ##
 ##
 ## CITAN is free software: you can redistribute it and/or modify
@@ -78,6 +78,7 @@
 #' \code{DocumentType} \tab	Type of the document; see above.\cr
 #' }
 #' The object returned may be imported into a local bibliometric storage via \code{\link{lbsImportDocuments}}.
+#' @export
 #' @examples
 #' \dontrun{
 #' conn <- lbsConnect("Bibliometrics.db");
@@ -90,7 +91,6 @@
 #' \code{\link{lbsConnect}},
 #' \code{\link{Scopus_ImportSources}},\cr
 #' \code{\link{read.table}}, \code{\link{lbsImportDocuments}}
-#' @export
 Scopus_ReadCSV <- function(filename, stopOnErrors=TRUE, dbIdentifier='Scopus', alternativeIdPattern="^.*\\id=|\\&.*$", ...)
 {
    datafile <- read.csv(filename, header = T, encoding="UTF-8", fileEncoding="UTF-8", stringsAsFactors=FALSE, ...);

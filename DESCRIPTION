@@ -1,7 +1,6 @@
 Package: CITAN
-Version: 2014.12-1
-Date: 2014-12-06
-LazyData: true
+Version: 2015.12-2
+Date: 2015-12-12
 Type: Package
 License: LGPL (>= 3)
 Authors@R: c(
@@ -14,14 +13,15 @@ Title: CITation ANalysis Toolpack
 Description: Supports quantitative
     research in scientometrics and bibliometrics. Provides
     various tools for preprocessing bibliographic
-    data retrieved e.g. from Elsevier's SciVerse Scopus,
-    calculating bibliometric impact of individuals
+    data retrieved, e.g., from Elsevier's SciVerse Scopus,
+    computing bibliometric impact of individuals,
     or modeling many phenomena encountered in the social sciences.
-Depends: R (>= 2.15.0), agop, RSQLite
-Imports: RGtk2, hash, stringi, DBI
-Packaged: 2014-12-06 18:48:23 UTC; gagolews
+Depends: R (>= 3.2.0), agop, RSQLite, RGtk2
+Imports: hash, stringi, DBI, grDevices, graphics, stats, utils
+RoxygenNote: 5.0.1
+NeedsCompilation: no
+Packaged: 2015-12-12 17:50:53 UTC; gagolews
 Author: Marek Gagolewski [aut, cre]
 Maintainer: Marek Gagolewski <gagolews@ibspan.waw.pl>
-NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2014-12-06 23:18:54
+Date/Publication: 2015-12-13 16:22:11
