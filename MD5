@@ -1,13 +1,13 @@
-e65af00070c7d0e173cd60118b1801b5 *DESCRIPTION
-d0eee2ad564d92b5ab4f8f519d7bc084 *NAMESPACE
-2f892dc744bf3e5890a4f6f155389b3d *NEWS
-f2b126403b5d03778c44b681280a2d3c *R/CITAN-package.R
+9a6bf23d9c24ea7c0812db857a56d33b *DESCRIPTION
+5b0704ea652e59ccfc566f3331fc9071 *NAMESPACE
+cfaf6a20553271b6b95156456817fe45 *NEWS
+5f80dc2d4971f9b6ca7ee7bc942433ca *R/CITAN-package.R
 dfb1a8092fe842599da467ea7dcdd8e8 *R/biblio.assess.R
 57e66eb4fb54a13b3880d244f5543a69 *R/biblio.clear.R
 e69fa46a743a45d5dc43ba58a77d393b *R/biblio.connect.R
 20e9ea1f313c38e80938df3239eb22ee *R/biblio.create.R
 381d3e8fb000425c01ceda8e7260e07c *R/biblio.getcitations.R
-71e6771f17899d7a89e2438c480e1702 *R/biblio.import.R
+e8b8f5301b1eafd0395efa3a2cadde8b *R/biblio.import.R
 898167109f7a73959528cf3ff6b15a67 *R/biblio.info.R
 e711d1479a3e829bcdccc08c64a5d8ad *R/biblio.internal.R
 f719e928f86e28bbbf2ec1a80952abd7 *R/biblio.search.R
@@ -17,7 +17,7 @@ ea9e00be6813d0b448d7b2c7944d2f13 *R/biblio.tidy.R
 c95311c00c1d71c8c5e3916f6aaf3b51 *R/scopus.data.R
 febb516278512b4861d40000bb6f5495 *R/scopus.importsources.R
 20158076c39308b47b25b7333204d726 *R/scopus.readcsv.R
-8c49fad59a767632cf14f2bc156ebb3b *R/string.R
+1ec168125c93bd09ea85a5e60c3c5b52 *R/string.R
 814d7ecbe4aae8f50c809889d7d6c1aa *R/sysdata.rda
 936c6218131b1f9220d0a0e6436fb612 *inst/CITATION
 aefd916773943a0d8c7a347fa772b629 *man/CITAN-package.Rd
